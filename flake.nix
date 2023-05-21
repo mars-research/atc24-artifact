@@ -96,6 +96,7 @@
     devShell = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
         bashInteractive
+        just
         wasmtime
         wasi-toolchain
         specperl520

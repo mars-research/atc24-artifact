@@ -1,45 +1,42 @@
 # SPEC Benchmark Environment
 
-## Instructions
-
-### SPEC CPU2017
+## SPEC CPU2017
 
 You need to install SPEC CPU2017 1.0.1 in `specCPU2017`.
 
-#### Applying patches
+### Applying patches
 ```bash
 cd specCPU2017
 patch -N -p1 < ../spec2017.patch
 ```
 
-#### Regenerating patches
+### Regenerating patches
 ```bash
 diff -Naur -x config -x build -x exe -x run -x result -x tmp specCPU2017.orig/ specCPU2017/ | tee spec2017.patch
 ```
 
-### SPEC CPU2006
+## SPEC CPU2006
 
 You need to extract SPEC CPU2006 1.0 in `specCPU2006`.
 Don't run the install scripts as we will use our toolset with AArch64 support (`specperl`, `specdiff`, `spectar`, etc.).
 
-#### Setting up tools
+### Setting up tools
 
 ```bash
-./setup-spec2006.sh
+just setup-spec2006
 ```
 
-#### Running benchmarks
+### Running benchmarks
 
 ```bash
 cd specCPU2006
 SPEC=$PWD bin/runspec --config=wasm2006 [...]
 ```
 
-#### Regenerating patches
+### Regenerating patches
 
 ```bash
-diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUM.tools -x '*.rej' specCPU2006.orig/ specCPU2006/ | sed '/Binary\ files\ /d' | tee spec2006.patch
-diff -Nur specCPU2006{.orig,}/tools/src/specinvoke/unix.c | tee -a spec2006.patch
+just regen-spec2006
 ```
 
 ## Notes
