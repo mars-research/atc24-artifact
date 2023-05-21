@@ -23,17 +23,17 @@
       llvm = pkgs.llvmPackages_16;
       makeNormal = name: pkgs.writeShellScript "wasi-${name}" ''
         exec ${llvm.clang-unwrapped}/bin/${name} \
-          --sysroot $WASI_SDK/share/wasi-sysroot \
-          -isystem $WASI_SDK/share/wasi-sysroot/include \
-          -resource-dir=$WASI_SDK/lib/clang/16 \
+          --sysroot ${wasi-sdk}/share/wasi-sysroot \
+          -isystem ${wasi-sdk}/share/wasi-sysroot/include \
+          -resource-dir=${wasi-sdk}/lib/clang/16 \
           --target=wasm32-wasi \
           "$@"
       '';
       makeThreaded = name: pkgs.writeShellScript "wasi-threads-${name}" ''
         exec ${llvm.clang-unwrapped}/bin/${name} \
-          --sysroot $WASI_SDK/share/wasi-sysroot \
-          -isystem $WASI_SDK/share/wasi-sysroot/include \
-          -resource-dir=$WASI_SDK/lib/clang/16 \
+          --sysroot ${wasi-sdk}/share/wasi-sysroot \
+          -isystem ${wasi-sdk}/share/wasi-sysroot/include \
+          -resource-dir=${wasi-sdk}/lib/clang/16 \
           --target=wasm32-wasi-threads \
           -pthread \
           -Wl,--whole-archive,-lpthread,--no-whole-archive \
@@ -58,7 +58,7 @@
       NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
       NIX_LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.libxcrypt-legacy ];
 
-      WASI_SDK = wasi-sdk;
+      WASI_SDK_PATH = wasi-sdk;
     };
   });
 }
