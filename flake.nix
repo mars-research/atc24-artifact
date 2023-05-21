@@ -5,15 +5,57 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     mars-std.url = "github:mars-research/mars-std";
     mars-std.inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs-perl520 = {
+      url = "github:NixOS/nixpkgs/878bbaf4e9d49c251d90f0790d2e7ebcf622ddd0";
+      flake = false;
+    };
   };
 
-  outputs = { self, mars-std, ... }: let
+  outputs = { self, mars-std, nixpkgs-perl520, ... }: let
     # System types to support.
     supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
   in mars-std.lib.eachSystem supportedSystems (system: let
     pkgs = mars-std.legacyPackages.${system};
     inherit (pkgs) lib;
 
+    # Perl 5.20 for CPU2006
+    pkgsPerl520 = import nixpkgs-perl520 {
+      inherit system;
+      overlays = [];
+    };
+    perl520Packages = pkgsPerl520.callPackage (pkgsPerl520.path + "/pkgs/top-level/perl-packages.nix") {
+      overrides = {};
+      pkgs = pkgsPerl520 // {
+        buildPerlPackage = attrs: (pkgsPerl520.callPackage (pkgsPerl520.path + "/pkgs/development/perl-modules/generic") pkgsPerl520.perl520) ({
+          doCheck = false;
+        } // attrs);
+        perl = pkgsPerl520.perl520;
+      };
+    };
+    perl520Path = pkgsPerl520.lib.makePerlPath (with perl520Packages; [
+      CompressBzip2
+      XMLSAX XMLNamespaceSupport
+      LWPUserAgent
+      HTTPMessage HTTPDate
+      URI IOStringy EncodeLocale
+      GD MailTools FontAFM MIMETypes
+    ]);
+    # specperl -> specperl520
+    specperl520wrapper = pkgs.writeShellScriptBin "specperl" ''
+      exec specperl520 "$@"
+    '';
+    specperl520 = pkgs.writeShellScriptBin "specperl520" ''
+      if [ -z "''${SPEC}" ]; then
+        >&2 echo "This perl is only intended for SPEC 2006. Set \$SPEC to continue"
+        exit 1
+      fi
+
+      export PATH="''${PATH:+''${PATH}:}${specperl520wrapper}/bin:$SPEC/bin"
+      export PERL5LIB="''${PERL5LIB:+''${PERL5LIB}:}$PWD/bin:${perl520Path}"
+      exec ${pkgsPerl520.perl520}/bin/perl "$@"
+    '';
+
+    # WASM toolchain
     wasi-sdk = builtins.fetchTarball {
       name = "wasi-sdk";
       url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz";
@@ -51,10 +93,12 @@
       ln -s ${llvm.lld}/bin/wasm-ld $out/bin/wasm-ld
     '';
   in {
-    devShell = pkgs.mkShellNoCC {
+    devShell = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
+        bashInteractive
         wasmtime
         wasi-toolchain
+        specperl520
       ];
 
       NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
