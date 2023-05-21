@@ -1,0 +1,33 @@
+diff -Naur -x run -x exe -x build -x config -x result -x tmp specCPU2017.orig/benchspec/CPU/544.nab_r/src/molio.c specCPU2017/benchspec/CPU/544.nab_r/src/molio.c
+--- specCPU2017.orig/benchspec/CPU/544.nab_r/src/molio.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2017/benchspec/CPU/544.nab_r/src/molio.c	2023-05-21 01:22:29.750504091 +0000
+@@ -97,7 +97,7 @@
+ static void mk_wwpdb_aname(char[], char[], char[]);
+ 
+ int get_mytaskid(void);
+-void reducerror(int);
++int reducerror(int);
+ char *ggets(char *, int, FILE *);
+ void upd_molnumbers(MOLECULE_T *);
+ MOLECULE_T *newmolecule(void);
+diff -Naur -x run -x exe -x build -x config -x result -x tmp specCPU2017.orig/benchspec/CPU/544.nab_r/src/prm.c specCPU2017/benchspec/CPU/544.nab_r/src/prm.c
+--- specCPU2017.orig/benchspec/CPU/544.nab_r/src/prm.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2017/benchspec/CPU/544.nab_r/src/prm.c	2023-05-21 01:22:38.542484440 +0000
+@@ -41,7 +41,7 @@
+ #include "mpi.h"
+ #endif
+ 
+-extern int errno;
++extern _Thread_local int errno;
+ 
+ static int compressed = 0;
+ static char e_msg[256];
+@@ -60,7 +60,7 @@
+ 
+ int get_mytaskid(void);
+ int rt_errormsg_s(int, char[], char[]);
+-void reducerror(int);
++int reducerror(int);
+ 
+ /***********************************************************************
+                             GGETS()
