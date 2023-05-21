@@ -1,0 +1,12 @@
+.direnv
+.vscode
+
+result*
+
+*.o
+*.out
+
+*~
+*.swp
+
+/specCPU2017
