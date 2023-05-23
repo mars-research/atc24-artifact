@@ -22,5 +22,5 @@ fi
 
 >&2 echo "Regenerating patches..."
 
-rundiff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUM.tools -x '*.rej' specCPU2006.orig/ specCPU2006/ | sed '/Binary\ files\ /d' | tee spec2006.patch
+rundiff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/ specCPU2006/ | sed '/Binary\ files\ /d' | tee spec2006.patch
 rundiff -Nur specCPU2006{.orig,}/tools/src/specinvoke/unix.c | tee -a spec2006.patch
