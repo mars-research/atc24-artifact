@@ -1,3 +1,96 @@
+diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/lencod.c specCPU2006/benchspec/CPU2006/464.h264ref/src/lencod.c
+--- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/lencod.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/lencod.c	2023-05-24 00:54:52.678823261 +0000
+@@ -260,7 +260,7 @@
+       }
+   }
+ 
+-  init_dpb(input);
++  init_dpb();
+   init_out_buffer();
+ 
+   enc_picture = enc_frame_picture = enc_top_picture = enc_bottom_picture = NULL;
+diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_matrix.c specCPU2006/benchspec/CPU2006/464.h264ref/src/q_matrix.c
+--- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_matrix.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_matrix.c	2023-05-24 00:59:14.991352403 +0000
+@@ -13,7 +13,7 @@
+ 
+ #include "global.h"
+ 
+-extern char *GetConfigFileContent (char *Filename, int error_type);
++extern char *GetConfigFileContent (char *Filename);
+ 
+ #define MAX_ITEMS_TO_PARSE  1000
+ 
+@@ -373,7 +373,7 @@
+   if(input->ScalingMatrixPresentFlag)
+   {
+     printf ("Parsing QMatrix file %s ", input->QmatrixFile);
+-    content = GetConfigFileContent(input->QmatrixFile, 0);
++    content = GetConfigFileContent(input->QmatrixFile);
+     if(content!='\0')
+       ParseMatrix(content, strlen (content));
+     else
+diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_offsets.c specCPU2006/benchspec/CPU2006/464.h264ref/src/q_offsets.c
+--- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_offsets.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_offsets.c	2023-05-24 00:58:47.487401753 +0000
+@@ -13,7 +13,7 @@
+ 
+ #include "global.h"
+ 
+-extern char *GetConfigFileContent (char *Filename, int error_type);
++extern char *GetConfigFileContent (char *Filename);
+ 
+ #define MAX_ITEMS_TO_PARSE  1000
+ 
+@@ -298,7 +298,7 @@
+   if(input->OffsetMatrixPresentFlag)
+   {
+     printf ("Parsing Quantization Offset Matrix file %s ", input->QOffsetMatrixFile);
+-    content = GetConfigFileContent(input->QOffsetMatrixFile, 0);
++    content = GetConfigFileContent(input->QOffsetMatrixFile);
+     if(content!='\0')
+       ParseQOffsetMatrix(content, strlen (content));
+     else
+diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/slice.c specCPU2006/benchspec/CPU2006/464.h264ref/src/slice.c
+--- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/slice.c	1970-01-01 00:00:00.000000000 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/slice.c	2023-05-24 00:59:54.360281522 +0000
+@@ -92,7 +92,7 @@
+ 
+     currStream->write_flag = 0;
+     if (i==0)     // First partition
+-      header_len += SliceHeader (0);
++      header_len += SliceHeader ();
+     else          // Second/Third partition
+       header_len += Partition_BC_Header(i);
+      
+@@ -268,7 +268,7 @@
+           end_of_slice = TRUE;
+         }
+         NumberOfCodedMBs++;       // only here we are sure that the coded MB is actually included in the slice
+-        proceed2nextMacroblock (CurrentMbAddr);
++        proceed2nextMacroblock ();
+       }
+       else
+       {
+@@ -422,7 +422,7 @@
+       write_one_macroblock (1);     // write the Top MB data to the bitstream
+       NumberOfCodedMBs++;   // only here we are sure that the coded MB is actually included in the slice
+       terminate_macroblock (&end_of_slice, &recode_macroblock);     // done coding the Top MB 
+-      proceed2nextMacroblock (CurrentMbAddr);        // Go to next macroblock
++      proceed2nextMacroblock ();        // Go to next macroblock
+       
+       //Rate control
+       img->bot_MB = 1;//for Rate control
+@@ -436,7 +436,7 @@
+       write_one_macroblock (0);     // write the Bottom MB data to the bitstream
+       NumberOfCodedMBs++;   // only here we are sure that the coded MB is actually included in the slice
+       terminate_macroblock (&end_of_slice, &recode_macroblock);     // done coding the Top MB 
+-      proceed2nextMacroblock (CurrentMbAddr);        // Go to next macroblock
++      proceed2nextMacroblock ();        // Go to next macroblock
+       
+       if (MBPairIsField)    // if MB Pair was coded as field the buffer size variables back to frame mode
+       {
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/bin/parse.pl specCPU2006/bin/parse.pl
 --- specCPU2006.orig/bin/parse.pl	1970-01-01 00:00:00.000000000 +0000
 +++ specCPU2006/bin/parse.pl	2023-05-22 21:38:29.629971507 +0000
@@ -40,7 +133,37 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
  			   method method_named
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/MANIFEST specCPU2006/MANIFEST
 --- specCPU2006.orig/MANIFEST	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/MANIFEST	2023-05-22 21:38:29.632971500 +0000
++++ specCPU2006/MANIFEST	2023-05-24 01:00:10.924251697 +0000
+@@ -7028,7 +7028,7 @@
+ efe95ec99c8a04f441f1e09fb0134c65 * 00000286 benchspec/CPU2006/464.h264ref/src/intrarefresh.h
+ 09362029c197e8e170c5dd4ee720a593 * 0000223C benchspec/CPU2006/464.h264ref/src/leaky_bucket.c
+ 213adf7ee568ec8230f9a0ac7e9597f9 * 00000372 benchspec/CPU2006/464.h264ref/src/leaky_bucket.h
+-d27adc49b0c7b1f6d0380d882a0b86c9 * 00014ADB benchspec/CPU2006/464.h264ref/src/lencod.c
++64bff15c8c71d65a73e6d7428114a8d3 * 00014ADB benchspec/CPU2006/464.h264ref/src/lencod.c
+ e45d32ee4f1dfe3a5365ed23cffd1a3d * 000050AD benchspec/CPU2006/464.h264ref/src/loopFilter.c
+ 511a65f8d92b8d91aedc287941e6a819 * 0002134B benchspec/CPU2006/464.h264ref/src/macroblock.c
+ 9551fea5b070df94533694a1cd3ba7a5 * 00000B06 benchspec/CPU2006/464.h264ref/src/macroblock.h
+@@ -7052,9 +7052,9 @@
+ f63b4de573b5d634b5163ec25f45a174 * 00000680 benchspec/CPU2006/464.h264ref/src/parset.h
+ e3e552fdde88cbff32f44acdcfe27df5 * 00000974 benchspec/CPU2006/464.h264ref/src/parsetcommon.c
+ f40ad3d3eb402a37ba4638ec6d01cdc9 * 000027AA benchspec/CPU2006/464.h264ref/src/parsetcommon.h
+-efa519a0e6805ccdd75c641fbc64517e * 0000458B benchspec/CPU2006/464.h264ref/src/q_matrix.c
++0698b03dbe3c02e7d95e3d12657a5ec4 * 0000458B benchspec/CPU2006/464.h264ref/src/q_matrix.c
+ 9c53677316a013376aa8416ec97b2a5b * 000004D9 benchspec/CPU2006/464.h264ref/src/q_matrix.h
+-137012764141c8312af6f12756544af3 * 00002D9D benchspec/CPU2006/464.h264ref/src/q_offsets.c
++138c892f86009c8ff9231a7111317181 * 00002D9D benchspec/CPU2006/464.h264ref/src/q_offsets.c
+ 84ceeb555a5f7c784b1e97173b0f1faa * 000002C3 benchspec/CPU2006/464.h264ref/src/q_offsets.h
+ dd0e7c2b52ac6515de51b11a8adbadcb * 0000CCAE benchspec/CPU2006/464.h264ref/src/ratectl.c
+ a085acb183df3898124f3c8f7984b3e1 * 00001623 benchspec/CPU2006/464.h264ref/src/ratectl.h
+@@ -7068,7 +7068,7 @@
+ 15cc76f9b7c5f0fdccaecc58ac9dd565 * 00000A2B benchspec/CPU2006/464.h264ref/src/rtp.h
+ f4b3f4146897508a8ee39f4b165ec3d0 * 0000C55C benchspec/CPU2006/464.h264ref/src/sei.c
+ 26bb88faeb368a38016edbaa3e127705 * 00001C16 benchspec/CPU2006/464.h264ref/src/sei.h
+-dae7d2a0585d9e565ac74df87aaa2098 * 00007FF6 benchspec/CPU2006/464.h264ref/src/slice.c
++2fef21512e363b869c2e05b1a07790ea * 00007FF6 benchspec/CPU2006/464.h264ref/src/slice.c
+ c879b43cf1f660e021ed37ce2dbab6ff * 00000506 benchspec/CPU2006/464.h264ref/src/specrand.c
+ b935800d2690d6cf2af6a5d516057a1e * 00000033 benchspec/CPU2006/464.h264ref/src/specrand.h
+ c650ed1b7d9ef9a5897f1631b4ee16e4 * 0000F896 benchspec/CPU2006/464.h264ref/src/transform8x8.c
 @@ -10322,7 +10322,7 @@
  d1b7f4465d01b0fb437b24467e799a06 * 000002B8 bin/os.pl
  f5efbf1bf09d2add5baa78a39556a081 * 00000866 bin/packagetools
