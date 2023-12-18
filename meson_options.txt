@@ -1,0 +1,13 @@
+option(
+  'engines',
+  type : 'array',
+  choices : ['null', 'morello'],
+  value : ['null', 'morello'],
+)
+
+option(
+  'default-engine',
+  type : 'combo',
+  choices : ['null', 'morello'],
+  value : 'null',
+)
