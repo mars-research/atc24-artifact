@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Domain.hpp"
+#include "util.hpp"
 
 #define CALL_SLOT_VADDR 0
 #define CALL_SLOT_SIZE 16

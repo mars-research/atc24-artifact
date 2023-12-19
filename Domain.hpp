@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 #include "cheri.h"
-#include "util.hpp"
 
 // Layout:
 //
