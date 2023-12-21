@@ -31,6 +31,15 @@
 typedef Elf64_Ehdr Ehdr;
 typedef Elf64_Phdr Phdr;
 typedef Elf64_Dyn Dyn;
+typedef Elf64_Rel Rel;
+typedef Elf64_Rela Rela;
+#define R_TYPE(i) ELF64_R_TYPE(i)
+
+#ifdef __aarch64__
+#define R_RELATIVE R_AARCH64_RELATIVE
+#else
+#error Domain.hpp: Unsupported platform
+#endif
 
 struct Alignment {
 	uint64_t alignment;
@@ -181,6 +190,7 @@ protected:
 
 			if (ph.p_type == PT_DYNAMIC) {
 				Dynamic dyn(fd, ph, load_bias, page_size);
+				dyn.fixup();
 			}
 
 			if (ph.p_type != PT_LOAD || ph.p_memsz == 0) {
@@ -313,25 +323,86 @@ protected:
 
 	struct Dynamic {
 		Dyn *base;
+		uint64_t load_bias;
 		Alignment page_size;
 
 		Dynamic(const int fd, Phdr &ph, uint64_t load_bias, Alignment &page_size)
-			: page_size(page_size)
+			: load_bias(load_bias), page_size(page_size)
 		{
 			if (ph.p_type != PT_DYNAMIC) {
 				throw std::runtime_error("Not a PT_DYNAMIC segment");
 			}
 
 			base = (Dyn*)((uint8_t*)load_bias + ph.p_vaddr);
+		}
 
-			Dyn *cur = base;
+		void fixup() {
+			Rela *rela = nullptr;
+			size_t rela_len = 0;
+
+			Rel *rel = nullptr;
+			size_t rel_len = 0;
+
 			for (Dyn *cur = base; cur->d_tag != DT_NULL; ++cur) {
 				switch (cur->d_tag) {
+					case DT_RELA:
+						rela = (Rela*)((uint8_t*)load_bias + cur->d_un.d_ptr);
+						break;
+					case DT_RELASZ:
+						rela_len = (size_t)cur->d_un.d_val / sizeof(Rela);
+						break;
+					case DT_RELAENT:
+						if (cur->d_un.d_val != sizeof(Rela)) {
+							throw std::runtime_error("DT_RELAENT has unsupported size");
+						}
+						break;
+
+					case DT_REL:
+						rel = (Rel*)((uint8_t*)load_bias + cur->d_un.d_ptr);
+						break;
+					case DT_RELSZ:
+						rel_len = (size_t)cur->d_un.d_val / sizeof(Rel);
+						break;
+					case DT_RELENT:
+						if (cur->d_un.d_val != sizeof(Rel)) {
+							throw std::runtime_error("DT_RELENT has unsupported size");
+						}
+						break;
+
 					case DT_PLTGOT:
 						throw std::runtime_error("GOT/PLT is not implemented");
 						break;
 					default:
 						break;
+				}
+			}
+
+			if (rela) {
+				for (size_t i = 0; i < rela_len; ++i) {
+					Rela *cur = rela + i;
+					auto r_type = R_TYPE(cur->r_info);
+
+					if (r_type != R_RELATIVE) {
+						throw std::runtime_error("Unsupported relocation");
+					}
+
+					volatile uint64_t *ptr = (volatile uint64_t*)((uint8_t*)load_bias + cur->r_offset);
+					*ptr = load_bias + cur->r_addend;
+				}
+			}
+
+			if (rel) {
+				for (size_t i = 0; i < rel_len; ++i) {
+					Rel *cur = rel + i;
+					auto r_type = R_TYPE(cur->r_info);
+
+					if (r_type != R_RELATIVE) {
+						throw std::runtime_error("Unsupported relocation");
+					}
+
+					volatile uint64_t *ptr = (volatile uint64_t*)((uint8_t*)load_bias + cur->r_offset);
+					uint64_t addend = *ptr;
+					*ptr = load_bias + addend;
 				}
 			}
 		}
