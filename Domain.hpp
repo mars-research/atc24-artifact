@@ -180,7 +180,7 @@ protected:
 			Phdr ph = phs.ptr()[i];
 
 			if (ph.p_type == PT_DYNAMIC) {
-				Dynamic dyn(fd, ph, page_size);
+				Dynamic dyn(fd, ph, load_bias, page_size);
 			}
 
 			if (ph.p_type != PT_LOAD || ph.p_memsz == 0) {
@@ -312,32 +312,17 @@ protected:
 	};
 
 	struct Dynamic {
-		void *mapped;
-		size_t map_size;
 		Dyn *base;
 		Alignment page_size;
 
-		Dynamic(const int fd, Phdr &ph, Alignment &page_size)
+		Dynamic(const int fd, Phdr &ph, uint64_t load_bias, Alignment &page_size)
 			: page_size(page_size)
 		{
 			if (ph.p_type != PT_DYNAMIC) {
 				throw std::runtime_error("Not a PT_DYNAMIC segment");
 			}
 
-			uint64_t filesz = ph.p_filesz;
-			uint64_t offset = ph.p_offset;
-			uint64_t fend = offset + filesz;
-			uint64_t map_offset = page_size.alignDown(offset);
-			map_size = page_size.alignUp(fend) - map_offset;
-
-			mapped = mmap(nullptr, map_size, PROT_READ, MAP_PRIVATE, fd, map_offset);
-
-			if (mapped == MAP_FAILED) {
-				fprintf(stderr, "Failed to map PT_DYNAMIC offset 0x%lx (%s)\n", ph.p_offset, strerror(errno));
-				throw std::runtime_error("Failed to map PT_DYNAMIC");
-			}
-
-			base = (Dyn*)((uint8_t*)mapped + page_size.offset(offset));
+			base = (Dyn*)((uint8_t*)load_bias + ph.p_vaddr);
 
 			Dyn *cur = base;
 			for (Dyn *cur = base; cur->d_tag != DT_NULL; ++cur) {
@@ -349,10 +334,6 @@ protected:
 						break;
 				}
 			}
-		}
-
-		~Dynamic() {
-			munmap(mapped, map_size);
 		}
 	};
 };
