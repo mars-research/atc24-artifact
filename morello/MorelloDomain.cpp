@@ -337,3 +337,47 @@ DomainTcbTrampoline::DomainTcbTrampoline(MorelloDomain *from_domain, void *calle
 		throw std::runtime_error("Failed to mprotect trampoline page");
 	}
 }
+
+// TCB -> Domain
+TcbDomainTrampoline::TcbDomainTrampoline(MorelloDomain *to_domain) : SealedTrampoline() {
+	size_t bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
+	this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
+
+	context = to_domain->context;
+
+	fprintf(stderr, "[trampoline] TCB -> Domain %s\n", to_domain->name.data());
+
+	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
+	auto push_capability = [&] (void *__capability cap) {
+		store_cap(context_ptr, cap);
+		context_ptr++;
+	};
+
+	// [Trampoline Code][Super Cap][Caller Cap][Callee Cap]
+
+	{
+		void *__capability super_cap = get_ddc_cur();
+		super_cap = __builtin_cheri_address_set(super_cap, to_domain->entry_point);
+		push_capability(super_cap);
+	}
+
+	{
+		void *__capability caller_cap = get_ddc_cur();
+		caller_cap = __builtin_cheri_perms_and(caller_cap, context->getDomainPermMask());
+		caller_cap = __builtin_cheri_address_set(caller_cap, (uint64_t)context->tcb_base);
+		push_capability(caller_cap);
+	}
+
+	{
+		void *__capability callee_cap = get_ddc_cur();
+		callee_cap = __builtin_cheri_perms_and(callee_cap, context->getDomainPermMask());
+		callee_cap = __builtin_cheri_address_set(callee_cap, to_domain->base);
+		callee_cap = __builtin_cheri_bounds_set(callee_cap, to_domain->size);
+		push_capability(callee_cap);
+	}
+
+
+	if (mprotect(mapped, map_size, PROT_READ | PROT_EXEC)) {
+		throw std::runtime_error("Failed to mprotect trampoline page");
+	}
+}

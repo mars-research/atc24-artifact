@@ -10,12 +10,14 @@ class MorelloDomain;
 struct SealedTrampoline;
 struct InterDomainTrampoline;
 struct DomainTcbTrampoline;
+struct TcbDomainTrampoline;
 
 class MorelloContext : public Context<MorelloContext> {
 	friend MorelloDomain;
 	friend SealedTrampoline;
 	friend DomainTcbTrampoline;
 	friend InterDomainTrampoline;
+	friend TcbDomainTrampoline;
 
 public:
 	MorelloContext();

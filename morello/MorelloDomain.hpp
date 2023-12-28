@@ -11,6 +11,7 @@
 struct SealedTrampoline;
 struct InterDomainTrampoline;
 struct DomainTcbTrampoline;
+struct TcbDomainTrampoline;
 
 // Reserved:
 // Exit Trampoline @ 0x0
@@ -21,6 +22,7 @@ class MorelloDomain : public Domain<MorelloDomain, MorelloContext> {
 	friend SealedTrampoline;
 	friend InterDomainTrampoline;
 	friend DomainTcbTrampoline;
+	friend TcbDomainTrampoline;
 
 public:
 	static constexpr const char *TYPE = "morello";
@@ -66,4 +68,9 @@ struct InterDomainTrampoline : public SealedTrampoline {
 // Domain -> TCB
 struct DomainTcbTrampoline : public SealedTrampoline {
 	DomainTcbTrampoline(MorelloDomain *from_domain, void *callee);
+};
+
+// TCB -> Domain
+struct TcbDomainTrampoline : public SealedTrampoline {
+	TcbDomainTrampoline(MorelloDomain *to_domain);
 };
