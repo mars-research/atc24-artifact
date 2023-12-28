@@ -15,7 +15,7 @@
 
 #include DEFAULT_DOMAIN_HEADER
 
-#if DEFAULT_DOMAIN_TYPE==MorelloDomain
+#ifdef DEFAULT_DOMAIN_TYPE_MORELLO
 uint64_t (*__capability foo_entry)(uint64_t, uint64_t);
 
 uint64_t tcb_main() {
@@ -47,7 +47,7 @@ int main() {
 	ret = foo.start(thread_id);
 	printf("foo() -> 0x%lx\n", ret);
 
-#if DEFAULT_DOMAIN_TYPE==MorelloDomain
+#ifdef DEFAULT_DOMAIN_TYPE_MORELLO
 	TcbDomainTrampoline *foo_tramp = new TcbDomainTrampoline(&foo);
 	foo_entry = (uint64_t (* __capability)(uint64_t, uint64_t))foo_tramp->cap();
 
