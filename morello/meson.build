@@ -10,6 +10,18 @@ morello_trampoline = custom_target('morello-trampoline',
   ] + meson.get_compiler('c').cmd_array() + [ '-mabi=purecap' ],
 )
 
+morello_tcb_trampoline = custom_target('morello-tcb-trampoline',
+  input : ['build-trampoline.sh', 'trampoline.tcb.S', 'trampoline.S'],
+  output : ['trampoline.tcb.bin.o'],
+  command : [
+    'bash',
+    '@INPUT0@',
+    'morello_tcb_trampoline', # NAME
+    '@INPUT1@', # SRC
+    '@OUTPUT@', # DST
+  ] + meson.get_compiler('c').cmd_array() + [ '-mabi=purecap' ],
+)
+
 morello_rets_trampoline = custom_target('morello-rets-trampoline',
   input : ['build-trampoline.sh', 'rets-trampoline.S'],
   output : ['rets-trampoline.bin.o'],
@@ -34,7 +46,7 @@ morello_alt_rets_trampoline = custom_target('morello-alt-rets-trampoline',
   ] + meson.get_compiler('c').cmd_array(),
 )
 
-morello_sources = files('MorelloDomain.cpp', 'util.S') + [morello_trampoline, morello_rets_trampoline, morello_alt_rets_trampoline]
+morello_sources = files('MorelloContext.cpp', 'MorelloDomain.cpp', 'util.S') + [morello_trampoline, morello_tcb_trampoline, morello_rets_trampoline, morello_alt_rets_trampoline]
 morello_includes = ['morello']
 
 

@@ -35,7 +35,15 @@ get_super_cap c10, c9
 get_caller_cap c11, c9
 get_callee_cap c12, c9
 
-// save everything!
+#ifdef CALLEE_IS_TCB
+
+// Only save C30/LR
+sub sp, sp, 16
+str c30, [sp]
+
+#else
+
+// Save callee-saved registers
 sub sp, sp, 16*12
 str c19, [sp, 16 * 0]
 str c20, [sp, 16 * 1]
@@ -49,6 +57,8 @@ str c27, [sp, 16 * 8]
 str c28, [sp, 16 * 9]
 str c29, [sp, 16 *10]
 str c30, [sp, 16 *11]
+
+#endif
 
 // per-thread stack offset
 mrs c13, cid_el0
@@ -77,12 +87,13 @@ mov sp, x15
 // switch to callee DDC
 msr ddc, c12
 
-#brk 0
+//brk 0
 
 // prepare target
 mov x9, x10
 seal c30, c12, rb // the value of callee_cap is at the rets trampoline
 
+#ifndef CALLEE_IS_TCB
 // wipe
 
 mov x8, 0
@@ -109,6 +120,7 @@ mov x27, 0
 mov x28, 0
 
 mov fp, 0
+#endif
 
 // call
 blr c30 // destroyed and replaced with return cap
@@ -125,9 +137,7 @@ blr c30 // destroyed and replaced with return cap
 adr c9, ctx
 
 get_super_cap c10, c9
-
 get_caller_cap c11, c9
-
 get_callee_cap c12, c9
 
 // per-thread stack offset
@@ -151,7 +161,15 @@ add c14, c11, x13 // c14 = caller_cap + x13
 ldr x15, [c14]
 mov sp, x15
 
-// restore everything
+#ifdef CALLEE_IS_TCB
+
+// Restore C30/LR
+ldr c30, [sp]
+add sp, sp, 16
+
+#else
+
+// Restore all callee-saved registers
 ldr c19, [sp, 16 * 0]
 ldr c20, [sp, 16 * 1]
 ldr c21, [sp, 16 * 2]
@@ -165,6 +183,8 @@ ldr c28, [sp, 16 * 9]
 ldr c29, [sp, 16 *10]
 ldr c30, [sp, 16 *11]
 add sp, sp, 16*12
+
+#endif
 
 ret // capability return because C64
 

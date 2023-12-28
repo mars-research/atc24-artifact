@@ -121,6 +121,10 @@ public:
 		return (static_cast<T*>(this))->setSlot_impl(slot_id, callee);
 	}
 
+	void setSlotTcb(uint64_t slot_id, void *callee) {
+		return (static_cast<T*>(this))->setSlotTcb_impl(slot_id, callee);
+	}
+
 	void invoke() {
 		std::cerr << "trying to invoke\n";
 

@@ -5,6 +5,9 @@ template class Domain<MorelloDomain, MorelloContext>;
 extern uint8_t _morello_trampoline_start;
 extern uint8_t _morello_trampoline_end;
 
+extern uint8_t _morello_tcb_trampoline_start;
+extern uint8_t _morello_tcb_trampoline_end;
+
 extern uint8_t _morello_rets_trampoline_start;
 extern uint8_t _morello_rets_trampoline_end;
 
@@ -18,6 +21,9 @@ static uint64_t align(uint64_t addr, uint64_t alignment) {
 MorelloDomain::MorelloDomain(MorelloContext *context, uint64_t id, std::string name, const char *path)
 	: Domain(context, id, name, path)
 {
+}
+
+MorelloDomain::~MorelloDomain() {
 }
 
 void MorelloDomain::postLoad_impl() {
@@ -36,8 +42,8 @@ void MorelloDomain::postLoad_impl() {
 		throw std::runtime_error("Failed to map RETS trampoline page");
 	}
 
-	uint64_t bin_size = (uint64_t)&_morello_alt_rets_trampoline_end - (uint64_t)&_morello_alt_rets_trampoline_start;
-	void *bin_start = (void*)&_morello_alt_rets_trampoline_start;
+	uint64_t bin_size = (uint64_t)&_morello_rets_trampoline_end - (uint64_t)&_morello_rets_trampoline_start;
+	void *bin_start = (void*)&_morello_rets_trampoline_start;
 
 	/*
 	if (name == "bar") {
@@ -93,12 +99,7 @@ uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
 	// RDDC
 	void *__capability domain_cap = get_ddc_cur();
 
-	#ifdef FAKE_RESTRICTED
-	domain_cap = __builtin_cheri_perms_and(domain_cap, CAP_PERM_ALL);
-	#else
-	domain_cap = __builtin_cheri_perms_and(domain_cap, CAP_PERM_ALL & ~CAP_PERM_EXECUTIVE);
-	#endif
-
+	domain_cap = __builtin_cheri_perms_and(domain_cap, context->getDomainPermMask());
 	domain_cap = __builtin_cheri_address_set(domain_cap, (uint64_t)base);
 	domain_cap = __builtin_cheri_bounds_set(domain_cap, DOMAIN_SIZE);
 	asm volatile("msr rddc_el0, %0" :: "C"(domain_cap));
@@ -109,44 +110,50 @@ uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
 	domain_cap = __builtin_cheri_address_set(domain_cap, (uint64_t)base); // TODO
 	domain_cap = __builtin_cheri_seal_entry(domain_cap);
 
-	#ifdef FAKE_RESTRICTED
-	std::cerr << "!!! USING FAKE RESTRICTED MODE FOR DEBUGGING\n";
-	#endif
+	if (!context->use_restricted_mode) {
+		std::cerr << "[morello] Staying in Executive Mode\n";
 
-	register uint64_t x0 __asm__("x0") = thread_id;
-	asm(
-		#ifdef FAKE_RESTRICTED
-		"mov x9, sp;"
-		"mov sp, %[initial_sp];"
-		"str x9, [sp, -16]!;"
-		#endif
+		register uint64_t x0 __asm__("x0") = thread_id;
+		asm(
+			// FIXME: Save to TCB stack!
+			"mov x9, sp;"
+			"mov sp, %[initial_sp];"
+			"str x9, [sp, -16]!;"
 
-		////"str x1, [sp, -16]!;"
-		"mov x9, %[entry_point];"
+			"mrs c9, ddc;"
+			"sub sp, sp, 16;"
+			"str c9, [sp];"
 
-		#ifdef FAKE_RESTRICTED
-		"blr %[callee];"
-		#else
-		"blrr %[callee];"
-		#endif
+			"mov x9, %[entry_point];"
 
-		////"ldr x1, [sp], 16;"
+			"blr %[callee];"
 
-		#ifdef FAKE_RESTRICTED
-		"ldr x9, [sp], 16;"
-		"mov sp, x9;"
-		#endif
+			"ldr c9, [sp];"
+			"msr ddc, c9;"
+			"add sp, sp, 16;"
 
-		: "=r"(x0)
-		: "r"(x0), [callee] "C"(domain_cap), [entry_point] "r"(entry_point)
+			"ldr x9, [sp], 16;"
+			"mov sp, x9;"
 
-		#ifdef FAKE_RESTRICTED
-		, [initial_sp] "r"(initial_sp)
-		#endif
+			: "=r"(x0)
+			: "r"(x0), [callee] "C"(domain_cap), [entry_point] "r"(entry_point), [initial_sp] "r"(initial_sp)
+			: "memory", "x30", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17"
+		);
+		return x0;
+	} else {
+		std::cerr << "[morello] Entering Restricted Mode\n";
 
-		: "memory", "x30", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17"
-	);
-	return x0;
+		register uint64_t x0 __asm__("x0") = thread_id;
+		asm(
+			"mov x9, %[entry_point];"
+			"blrr %[callee];"
+
+			: "=r"(x0)
+			: "r"(x0), [callee] "C"(domain_cap), [entry_point] "r"(entry_point)
+			: "memory", "x30", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17"
+		);
+		return x0;
+	}
 
 	/*
 	register uint64_t x0 __asm__("x0") = thread_id;
@@ -178,41 +185,42 @@ void MorelloDomain::setSlot_impl(uint64_t slot_id, MorelloDomain &callee) {
 	);
 }
 
+void MorelloDomain::setSlotTcb_impl(uint64_t slot_id, void *callee) {
+	SealedTcbTrampoline *tramp = new SealedTcbTrampoline(this, callee);
+	void *__capability cap = tramp->cap();
+
+	auto slot_addr = this->getSlot(slot_id);
+	asm volatile("str %0, [%1]" :: "C"(cap), "r"(slot_addr));
+
+	fprintf(stderr, "[morello] %s %ld (0x%lx) -> 0x%lx -> TCB %p\n",
+		name.data(), slot_id, slot_addr, __builtin_cheri_address_get(cap), callee
+	);
+}
+
 uint64_t MorelloDomain::getSlot(uint64_t slot_id) const {
 	return load_bias + CALL_SLOT_VADDR + CALL_SLOT_SIZE * slot_id;
 }
 
-SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain) {
-	uint64_t bin_size = (uint64_t)&_morello_trampoline_end - (uint64_t)&_morello_trampoline_start;
+SealedTrampoline::SealedTrampoline() {
+}
 
-	if (bin_size % 16) {
-		throw std::runtime_error(std::string("Trampoline binary not aligned: ") + std::to_string(bin_size));
+SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain) : SealedTrampoline() {
+	this->mapTrampoline(false); // non-TCB
+
+	if (from_domain->context != to_domain->context) {
+		throw std::runtime_error("Cannot link domains with different contexts");
 	}
+	context = from_domain->context;
 
-	if (bin_size > 4096) {
-		throw std::runtime_error(std::string("Trampoline binary too big: ") + std::to_string(bin_size));
-	}
+	fprintf(stderr, "[trampoline] Domain %s -> Domain %s\n", from_domain->name.data(), to_domain->name.data());
 
-	uint64_t bin_align = align(bin_size, 16);
-	//uint64_t bin_align = bin_size;
-
-	map_size = align(bin_align + 3 * sizeof(void *__capability), 4096);
-	mapped = mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-	if (mapped == MAP_FAILED) {
-		throw std::runtime_error("Failed to reserve trampoline memory");
-	}
-
-	fprintf(stderr, "[trampoline] Generated @ %p (bin_size=0x%lx, map_size=0x%lx, from=%s, to=%s)\n", mapped, bin_size, map_size, from_domain->name.data(), to_domain->name.data());
-
-	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + bin_align);
+	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
 	auto push_capability = [&] (void *__capability cap) {
 		store_cap(context_ptr, cap);
 		context_ptr++;
-    };
+	};
 
 	// [Trampoline Code][Super Cap][Caller Cap][Callee Cap]
-	memcpy(mapped, &_morello_trampoline_start, bin_size);
 
 	{
 		void *__capability super_cap = get_ddc_cur();
@@ -222,7 +230,7 @@ SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to
 
 	{
 		void *__capability caller_cap = get_ddc_cur();
-		caller_cap = __builtin_cheri_perms_and(caller_cap, CAP_PERM_ALL & ~CAP_PERM_EXECUTIVE);
+		caller_cap = __builtin_cheri_perms_and(caller_cap, context->getDomainPermMask());
 		caller_cap = __builtin_cheri_address_set(caller_cap, from_domain->base);
 		caller_cap = __builtin_cheri_bounds_set(caller_cap, from_domain->size);
 		push_capability(caller_cap);
@@ -230,7 +238,7 @@ SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to
 
 	{
 		void *__capability callee_cap = get_ddc_cur();
-		callee_cap = __builtin_cheri_perms_and(callee_cap, CAP_PERM_ALL & ~CAP_PERM_EXECUTIVE);
+		callee_cap = __builtin_cheri_perms_and(callee_cap, context->getDomainPermMask());
 		callee_cap = __builtin_cheri_address_set(callee_cap, to_domain->base);
 		callee_cap = __builtin_cheri_bounds_set(callee_cap, to_domain->size);
 		push_capability(callee_cap);
@@ -243,19 +251,88 @@ SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to
 }
 
 SealedTrampoline::~SealedTrampoline() {
-	std::cerr << "[trampoline] Unmapping " << mapped << "\n";
-	munmap(mapped, map_size);
+	if (mapped) {
+		std::cerr << "[trampoline] Unmapping " << mapped << "\n";
+		munmap(mapped, map_size);
+	}
+}
+
+SealedTcbTrampoline::SealedTcbTrampoline(MorelloDomain *from_domain, void *callee) : SealedTrampoline() {
+	this->mapTrampoline(true); // TCB
+	context = from_domain->context;
+
+	fprintf(stderr, "[trampoline] Domain %s -> TCB %p\n", from_domain->name.data(), callee);
+
+	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
+	auto push_capability = [&] (void *__capability cap) {
+		store_cap(context_ptr, cap);
+		context_ptr++;
+	};
+
+	// [Trampoline Code][Super Cap][Caller Cap][Callee Cap]
+
+	{
+		void *__capability super_cap = get_ddc_cur();
+		super_cap = __builtin_cheri_address_set(super_cap, (uint64_t)callee);
+		push_capability(super_cap);
+	}
+
+	{
+		void *__capability caller_cap = get_ddc_cur();
+		caller_cap = __builtin_cheri_perms_and(caller_cap, context->getDomainPermMask());
+		caller_cap = __builtin_cheri_address_set(caller_cap, from_domain->base);
+		caller_cap = __builtin_cheri_bounds_set(caller_cap, from_domain->size);
+		push_capability(caller_cap);
+	}
+
+	{
+		void *__capability callee_cap = get_ddc_cur();
+		callee_cap = __builtin_cheri_perms_and(callee_cap, context->getDomainPermMask());
+		callee_cap = __builtin_cheri_address_set(callee_cap, (uint64_t)context->tcb_base);
+		push_capability(callee_cap);
+	}
+
+
+	if (mprotect(mapped, map_size, PROT_READ | PROT_EXEC)) {
+		throw std::runtime_error("Failed to mprotect trampoline page");
+	}
+}
+
+void SealedTrampoline::mapTrampoline(bool tcb) {
+	uint64_t bin_size = (uint64_t)&_morello_trampoline_end - (uint64_t)&_morello_trampoline_start;
+	void *bin_start = (void*)&_morello_trampoline_start;
+
+	if (tcb) {
+		bin_size = (uint64_t)&_morello_tcb_trampoline_end - (uint64_t)&_morello_tcb_trampoline_start;
+		bin_start = (void*)&_morello_tcb_trampoline_start;
+	}
+
+	if (bin_size % 16) {
+		throw std::runtime_error(std::string("Trampoline binary not aligned: ") + std::to_string(bin_size));
+	}
+
+	if (bin_size > 4096) {
+		throw std::runtime_error(std::string("Trampoline binary too big: ") + std::to_string(bin_size));
+	}
+
+	cap_offset = align(bin_size, 16);
+
+	map_size = align(cap_offset + 3 * sizeof(void *__capability), 4096);
+	mapped = mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+	if (mapped == MAP_FAILED) {
+		throw std::runtime_error("Failed to reserve trampoline memory");
+	}
+
+	memcpy(mapped, bin_start, bin_size);
+
+	fprintf(stderr, "[trampoline] Generated @ %p (bin_size=0x%lx, map_size=0x%lx)\n", mapped, bin_size, map_size);
 }
 
 void *__capability SealedTrampoline::cap() {
 	void *__capability entry_cap = get_ddc_cur();
 
-	#ifdef FAKE_RESTRICTED
-	entry_cap = __builtin_cheri_perms_and(entry_cap, CAP_PERM_ALL);
-	#else
-	entry_cap = __builtin_cheri_perms_and(entry_cap, CAP_PERM_ALL & ~CAP_PERM_EXECUTIVE);
-	#endif
-
+	entry_cap = __builtin_cheri_perms_and(entry_cap, context->getDomainPermMask());
 	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
 	entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
 	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped | 0x1); // purecap

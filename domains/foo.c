@@ -22,9 +22,10 @@ static inline void *__capability get_call_slot(uint64_t slot_id) {
 	uint64_t scratch;
 	asm(
 		"adrp %[scratch], _morello_call_slots;"
+		"add %[scratch], %[scratch], %[slot_id], lsl 4;"
 		"ldr %[cap], [%[scratch]];"
-		: [cap] "=C"(cap)
-		: [scratch] "r"(scratch)
+		: [cap] "=C"(cap), [scratch] "=&r"(scratch)
+		: [slot_id] "r"(slot_id)
 	);
 	return cap;
 }
@@ -44,6 +45,8 @@ uint64_t call_slot_2(uint64_t slot_id, uint64_t a, uint64_t b) {
 
 uint64_t foo() {
 	uint64_t res = call_slot_2(0, 2, 2);
+
+	res += call_slot_2(1, 2, 2);
 
 	return res;
 }

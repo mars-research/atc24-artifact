@@ -18,3 +18,7 @@ uint64_t NullDomain::start_impl(uint64_t thread_id) {
 void NullDomain::setSlot_impl(uint64_t slot_id, NullDomain &callee) {
 	// TODO
 }
+
+void NullDomain::setSlotTcb_impl(uint64_t slot_id, void *callee) {
+	// TODO
+}
