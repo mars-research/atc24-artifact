@@ -1,2 +1,2 @@
-null_sources = files('NullDomain.cpp')
+null_sources = files('NullContext.cpp', 'NullDomain.cpp')
 null_includes = ['null']

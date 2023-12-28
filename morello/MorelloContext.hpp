@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Context.hpp"
 #include "Domain.hpp"
-#include "cheri.h"
+#include "util.hpp"
 
 class MorelloDomain;
 struct SealedTrampoline;
@@ -23,10 +23,13 @@ public:
 	MorelloContext();
 	~MorelloContext();
 
+	uint64_t startTcb_impl(uint64_t thread_id, void *callee);
+
 protected:
 	void *tcb_base;
 	bool use_restricted_mode;
 
 	void setUpTcb();
 	uint64_t getDomainPermMask() const;
+	uint64_t getStack(uint64_t thread_id) const;
 };

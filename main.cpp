@@ -15,6 +15,14 @@
 
 #include DEFAULT_DOMAIN_HEADER
 
+#if DEFAULT_DOMAIN_TYPE==MorelloDomain
+uint64_t (*__capability foo_entry)(uint64_t, uint64_t);
+
+uint64_t tcb_main() {
+	return foo_entry(2, 2) + 1;
+}
+#endif
+
 uint64_t hello_tcb() {
 	return 123;
 }
@@ -34,6 +42,16 @@ int main() {
 	bar.setSlot(0, baz);
 
 	uint64_t thread_id = 0;
-	uint64_t ret = foo.start(thread_id);
+	uint64_t ret;
+
+	ret = foo.start(thread_id);
 	printf("foo() -> 0x%lx\n", ret);
+
+#if DEFAULT_DOMAIN_TYPE==MorelloDomain
+	TcbDomainTrampoline *foo_tramp = new TcbDomainTrampoline(&foo);
+	foo_entry = (uint64_t (* __capability)(uint64_t, uint64_t))foo_tramp->cap();
+
+	ret = context.startTcb(thread_id, (void*)tcb_main);
+	printf("tcb_main() -> 0x%lx\n", ret);
+#endif
 }
