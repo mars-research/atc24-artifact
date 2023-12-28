@@ -9,14 +9,20 @@
 #define DEFAULT_DOMAIN_TYPE NullDomain
 #endif
 
+#ifndef DEFAULT_CONTEXT_TYPE
+#define DEFAULT_CONTEXT_TYPE NullContext
+#endif
+
 #include DEFAULT_DOMAIN_HEADER
 
 int main() {
 	std::cerr << "Domain type: " << DEFAULT_DOMAIN_TYPE::TYPE << "\n";
 
-	DEFAULT_DOMAIN_TYPE foo(0, "foo", "domains/foo.so");
-	DEFAULT_DOMAIN_TYPE bar(1, "bar", "domains/bar.so");
-	DEFAULT_DOMAIN_TYPE baz(2, "baz", "domains/baz.so");
+	DEFAULT_CONTEXT_TYPE context;
+
+	DEFAULT_DOMAIN_TYPE foo(&context, 0, "foo", "domains/foo.so");
+	DEFAULT_DOMAIN_TYPE bar(&context, 1, "bar", "domains/bar.so");
+	DEFAULT_DOMAIN_TYPE baz(&context, 2, "baz", "domains/baz.so");
 
 	foo.setSlot(0, bar); // call slot 0 in foo leads to bar
 	bar.setSlot(0, baz);

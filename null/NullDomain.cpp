@@ -1,9 +1,9 @@
 #include "NullDomain.hpp"
 
-template class Domain<NullDomain>;
+template class Domain<NullDomain, NullContext>;
 
-NullDomain::NullDomain(uint64_t id, std::string name, const char *path)
-	: Domain(id, name, path)
+NullDomain::NullDomain(NullContext *context, uint64_t id, std::string name, const char *path)
+	: Domain(context, id, name, path)
 {
 }
 

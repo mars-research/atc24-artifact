@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Domain.hpp"
+#include "NullContext.hpp"
 
-class NullDomain : public Domain<NullDomain> {
+class NullDomain : public Domain<NullDomain, NullContext> {
 public:
 	static constexpr const char *TYPE = "null";
 
-	NullDomain(uint64_t id, std::string name, const char *path);
+	NullDomain(NullContext *context, uint64_t id, std::string name, const char *path);
 
 	void postLoad_impl();
 	uint64_t start_impl(uint64_t thread_id);

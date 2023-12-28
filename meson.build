@@ -22,11 +22,13 @@ if get_option('default-engine') == 'morello'
   main_cflags += [
     '-DDEFAULT_DOMAIN_HEADER="MorelloDomain.hpp"',
     '-DDEFAULT_DOMAIN_TYPE=MorelloDomain',
+    '-DDEFAULT_CONTEXT_TYPE=MorelloContext',
   ]
 elif get_option('default-engine') == 'null'
   main_cflags += [
     '-DDEFAULT_DOMAIN_HEADER="NullDomain.hpp"',
     '-DDEFAULT_DOMAIN_TYPE=NullDomain',
+    '-DDEFAULT_CONTEXT_TYPE=NullContext',
   ]
 else
   error('Invalid default engine')

@@ -1,6 +1,6 @@
 #include "MorelloDomain.hpp"
 
-template class Domain<MorelloDomain>;
+template class Domain<MorelloDomain, MorelloContext>;
 
 extern uint8_t _morello_trampoline_start;
 extern uint8_t _morello_trampoline_end;
@@ -15,8 +15,8 @@ static uint64_t align(uint64_t addr, uint64_t alignment) {
 	return (addr + alignment - 1) & ~(alignment - 1);
 }
 
-MorelloDomain::MorelloDomain(uint64_t id, std::string name, const char *path)
-	: Domain(id, name, path)
+MorelloDomain::MorelloDomain(MorelloContext *context, uint64_t id, std::string name, const char *path)
+	: Domain(context, id, name, path)
 {
 }
 

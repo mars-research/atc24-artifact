@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Domain.hpp"
+#include "MorelloContext.hpp"
 #include "util.hpp"
 
 #define CALL_SLOT_VADDR 0
@@ -14,13 +15,13 @@ struct SealedTrampoline;
 //
 // VAddr:
 // Call Slots      @ 0x0 (16 bytes per slot)
-class MorelloDomain : public Domain<MorelloDomain> {
+class MorelloDomain : public Domain<MorelloDomain, MorelloContext> {
 	friend SealedTrampoline;
 
 public:
 	static constexpr const char *TYPE = "morello";
 
-	MorelloDomain(uint64_t id, std::string name, const char *path);
+	MorelloDomain(MorelloContext *context, uint64_t id, std::string name, const char *path);
 
 	void postLoad_impl();
 	uint64_t start_impl(uint64_t thread_id);

@@ -59,13 +59,13 @@ struct Alignment {
 	}
 };
 
-template<class T>
+template<class T, class CTX>
 class Domain {
 public:
 	static constexpr const char *TYPE = T::TYPE;
 
-	Domain(uint64_t id, std::string name, const char *path)
-		: id(id), page_size(4096), name(name)
+	Domain(CTX *context, uint64_t id, std::string name, const char *path)
+		: context(context), id(id), page_size(4096), name(name)
 	{
 		size = DOMAIN_SIZE;
 		void *mapped = mmap(nullptr, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -132,6 +132,8 @@ public:
 	}
 
 protected:
+	CTX *context;
+
 	void *__capability entry_cap;
 	uint64_t id;
 
