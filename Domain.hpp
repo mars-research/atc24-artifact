@@ -12,8 +12,6 @@
 #include <elf.h>
 #include <unistd.h>
 
-#include "cheri.h"
-
 // Layout:
 //
 // Reserved   @ 0x0
@@ -134,7 +132,6 @@ public:
 protected:
 	CTX *context;
 
-	void *__capability entry_cap;
 	uint64_t id;
 
 	uint64_t base;
