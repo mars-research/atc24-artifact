@@ -9,7 +9,8 @@
 #define CALL_SLOT_NUM 10
 
 struct SealedTrampoline;
-struct SealedTcbTrampoline;
+struct InterDomainTrampoline;
+struct DomainTcbTrampoline;
 
 // Reserved:
 // Exit Trampoline @ 0x0
@@ -18,7 +19,8 @@ struct SealedTcbTrampoline;
 // Call Slots      @ 0x0 (16 bytes per slot)
 class MorelloDomain : public Domain<MorelloDomain, MorelloContext> {
 	friend SealedTrampoline;
-	friend SealedTcbTrampoline;
+	friend InterDomainTrampoline;
+	friend DomainTcbTrampoline;
 
 public:
 	static constexpr const char *TYPE = "morello";
@@ -44,7 +46,6 @@ struct SealedTrampoline {
 
 public:
 	SealedTrampoline();
-	SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain);
 	~SealedTrampoline();
 
 	SealedTrampoline(const SealedTrampoline&) = delete; // cannot be copied
@@ -54,9 +55,15 @@ public:
 	void *__capability cap();
 
 protected:
-	void mapTrampoline(bool tcb);
+	void mapTrampoline(void *bin_start, size_t bin_size);
 };
 
-struct SealedTcbTrampoline : public SealedTrampoline {
-	SealedTcbTrampoline(MorelloDomain *from_domain, void *callee);
+// Domain -> Domain
+struct InterDomainTrampoline : public SealedTrampoline {
+	InterDomainTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain);
+};
+
+// Domain -> TCB
+struct DomainTcbTrampoline : public SealedTrampoline {
+	DomainTcbTrampoline(MorelloDomain *from_domain, void *callee);
 };

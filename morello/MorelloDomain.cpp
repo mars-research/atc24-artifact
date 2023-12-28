@@ -174,7 +174,7 @@ uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
 }
 
 void MorelloDomain::setSlot_impl(uint64_t slot_id, MorelloDomain &callee) {
-	SealedTrampoline *tramp = new SealedTrampoline(this, &callee);
+	InterDomainTrampoline *tramp = new InterDomainTrampoline(this, &callee);
 	void *__capability cap = tramp->cap();
 
 	auto slot_addr = this->getSlot(slot_id);
@@ -186,7 +186,7 @@ void MorelloDomain::setSlot_impl(uint64_t slot_id, MorelloDomain &callee) {
 }
 
 void MorelloDomain::setSlotTcb_impl(uint64_t slot_id, void *callee) {
-	SealedTcbTrampoline *tramp = new SealedTcbTrampoline(this, callee);
+	DomainTcbTrampoline *tramp = new DomainTcbTrampoline(this, callee);
 	void *__capability cap = tramp->cap();
 
 	auto slot_addr = this->getSlot(slot_id);
@@ -204,8 +204,52 @@ uint64_t MorelloDomain::getSlot(uint64_t slot_id) const {
 SealedTrampoline::SealedTrampoline() {
 }
 
-SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain) : SealedTrampoline() {
-	this->mapTrampoline(false); // non-TCB
+SealedTrampoline::~SealedTrampoline() {
+	if (mapped) {
+		std::cerr << "[trampoline] Unmapping " << mapped << "\n";
+		munmap(mapped, map_size);
+	}
+}
+
+void SealedTrampoline::mapTrampoline(void *bin_start, size_t bin_size) {
+	if (bin_size % 16) {
+		throw std::runtime_error(std::string("Trampoline binary not aligned: ") + std::to_string(bin_size));
+	}
+
+	if (bin_size > 4096) {
+		throw std::runtime_error(std::string("Trampoline binary too big: ") + std::to_string(bin_size));
+	}
+
+	cap_offset = align(bin_size, 16);
+
+	map_size = align(cap_offset + 3 * sizeof(void *__capability), 4096);
+	mapped = mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+	if (mapped == MAP_FAILED) {
+		throw std::runtime_error("Failed to reserve trampoline memory");
+	}
+
+	memcpy(mapped, bin_start, bin_size);
+
+	fprintf(stderr, "[trampoline] Generated @ %p (bin_size=0x%lx, map_size=0x%lx)\n", mapped, bin_size, map_size);
+}
+
+void *__capability SealedTrampoline::cap() {
+	void *__capability entry_cap = get_ddc_cur();
+
+	entry_cap = __builtin_cheri_perms_and(entry_cap, context->getDomainPermMask());
+	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
+	entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
+	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped | 0x1); // purecap
+	entry_cap = __builtin_cheri_seal_entry(entry_cap);
+
+	return entry_cap;
+}
+
+// Domain -> Domain
+InterDomainTrampoline::InterDomainTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain) : SealedTrampoline() {
+	size_t bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
+	this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
 
 	if (from_domain->context != to_domain->context) {
 		throw std::runtime_error("Cannot link domains with different contexts");
@@ -250,15 +294,11 @@ SealedTrampoline::SealedTrampoline(MorelloDomain *from_domain, MorelloDomain *to
 	}
 }
 
-SealedTrampoline::~SealedTrampoline() {
-	if (mapped) {
-		std::cerr << "[trampoline] Unmapping " << mapped << "\n";
-		munmap(mapped, map_size);
-	}
-}
+// Domain -> TCB
+DomainTcbTrampoline::DomainTcbTrampoline(MorelloDomain *from_domain, void *callee) : SealedTrampoline() {
+	size_t bin_size = (size_t)&_morello_tcb_trampoline_end - (size_t)&_morello_tcb_trampoline_start;
+	this->mapTrampoline((void*)&_morello_tcb_trampoline_start, bin_size);
 
-SealedTcbTrampoline::SealedTcbTrampoline(MorelloDomain *from_domain, void *callee) : SealedTrampoline() {
-	this->mapTrampoline(true); // TCB
 	context = from_domain->context;
 
 	fprintf(stderr, "[trampoline] Domain %s -> TCB %p\n", from_domain->name.data(), callee);
@@ -296,47 +336,4 @@ SealedTcbTrampoline::SealedTcbTrampoline(MorelloDomain *from_domain, void *calle
 	if (mprotect(mapped, map_size, PROT_READ | PROT_EXEC)) {
 		throw std::runtime_error("Failed to mprotect trampoline page");
 	}
-}
-
-void SealedTrampoline::mapTrampoline(bool tcb) {
-	uint64_t bin_size = (uint64_t)&_morello_trampoline_end - (uint64_t)&_morello_trampoline_start;
-	void *bin_start = (void*)&_morello_trampoline_start;
-
-	if (tcb) {
-		bin_size = (uint64_t)&_morello_tcb_trampoline_end - (uint64_t)&_morello_tcb_trampoline_start;
-		bin_start = (void*)&_morello_tcb_trampoline_start;
-	}
-
-	if (bin_size % 16) {
-		throw std::runtime_error(std::string("Trampoline binary not aligned: ") + std::to_string(bin_size));
-	}
-
-	if (bin_size > 4096) {
-		throw std::runtime_error(std::string("Trampoline binary too big: ") + std::to_string(bin_size));
-	}
-
-	cap_offset = align(bin_size, 16);
-
-	map_size = align(cap_offset + 3 * sizeof(void *__capability), 4096);
-	mapped = mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-	if (mapped == MAP_FAILED) {
-		throw std::runtime_error("Failed to reserve trampoline memory");
-	}
-
-	memcpy(mapped, bin_start, bin_size);
-
-	fprintf(stderr, "[trampoline] Generated @ %p (bin_size=0x%lx, map_size=0x%lx)\n", mapped, bin_size, map_size);
-}
-
-void *__capability SealedTrampoline::cap() {
-	void *__capability entry_cap = get_ddc_cur();
-
-	entry_cap = __builtin_cheri_perms_and(entry_cap, context->getDomainPermMask());
-	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
-	entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
-	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped | 0x1); // purecap
-	entry_cap = __builtin_cheri_seal_entry(entry_cap);
-
-	return entry_cap;
 }
