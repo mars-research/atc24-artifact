@@ -37,7 +37,7 @@ uint64_t call_slot_2(uint64_t slot_id, uint64_t a, uint64_t b) {
 		"blr %[cap];"
 		: "=r"(x0)
 		: [cap] "C"(get_call_slot(slot_id)), "r"(x0), "r"(x1)
-		: "x30", /*"x1",*/ "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17"
+		: "x30", /*"x1",*/ "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17", "x18"
 	);
 
 	return x0;
