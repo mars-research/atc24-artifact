@@ -1,6 +1,8 @@
 #include "NullDomain.hpp"
 
-template class Domain<NullDomain, NullContext>;
+template class Domain<null::NullDomain, null::NullContext>;
+
+namespace null {
 
 NullDomain::NullDomain(NullContext *context, uint64_t id, std::string name, const char *path)
 	: Domain(context, id, name, path)
@@ -21,4 +23,6 @@ void NullDomain::setSlot_impl(uint64_t slot_id, NullDomain &callee) {
 
 void NullDomain::setSlotTcb_impl(uint64_t slot_id, void *callee) {
 	// TODO
+}
+
 }

@@ -3,6 +3,8 @@
 #include "Domain.hpp"
 #include "NullContext.hpp"
 
+namespace null {
+
 class NullDomain : public Domain<NullDomain, NullContext> {
 public:
 	static constexpr const char *TYPE = "null";
@@ -14,3 +16,5 @@ public:
 	void setSlot_impl(uint64_t slot_id, NullDomain &callee);
 	void setSlotTcb_impl(uint64_t slot_id, void *callee);
 };
+
+}
