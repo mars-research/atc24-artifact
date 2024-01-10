@@ -1,13 +1,13 @@
 option(
   'engines',
   type : 'array',
-  choices : ['null', 'morello'],
-  value : ['null', 'morello'],
+  choices : ['null', 'morello', 'ideal'],
+  value : ['null', 'morello', 'ideal'],
 )
 
 option(
   'default-engine',
   type : 'combo',
-  choices : ['null', 'morello'],
+  choices : ['null', 'morello', 'ideal'],
   value : 'null',
 )

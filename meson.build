@@ -5,11 +5,17 @@ sources = ['main.cpp']
 includes = []
 
 subdir('null')
+subdir('ideal')
 subdir('morello')
 
 if get_option('engines').contains('null')
   sources += null_sources
   includes += null_includes
+endif
+
+if get_option('engines').contains('ideal')
+  sources += ideal_sources
+  includes += ideal_includes
 endif
 
 if get_option('engines').contains('morello')
@@ -24,6 +30,13 @@ if get_option('default-engine') == 'morello'
     '-DDEFAULT_DOMAIN_TYPE=morello::MorelloDomain',
     '-DDEFAULT_DOMAIN_TYPE_MORELLO',
     '-DDEFAULT_CONTEXT_TYPE=morello::MorelloContext',
+  ]
+elif get_option('default-engine') == 'ideal'
+  main_cflags += [
+    '-DDEFAULT_DOMAIN_HEADER="IdealDomain.hpp"',
+    '-DDEFAULT_DOMAIN_TYPE=ideal::IdealDomain',
+    '-DDEFAULT_DOMAIN_TYPE_IDEAL',
+    '-DDEFAULT_CONTEXT_TYPE=ideal::IdealContext',
   ]
 elif get_option('default-engine') == 'null'
   main_cflags += [
