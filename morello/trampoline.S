@@ -65,9 +65,15 @@ mrs c13, cid_el0
 lsl x13, x13, 22 // x13 = CID_EL0.value * 4MiB (STACK_SIZE)
 add x13, x13, 0x10000 // add STACK_OFFSET
 
-// save SP
+// get caller SP save location
 add c14, c11, x13 // x14 = caller_cap + x13
 
+// save caller saved SP
+sub sp, sp, 16
+ldr x15, [c14]
+str x15, [sp]
+
+// save caller SP
 mov x15, sp
 str x15, [c14]
 
@@ -75,11 +81,6 @@ str x15, [c14]
 
 // switch to callee SP
 add c14, c12, x13 // c14 = callee_cap + x13
-
-//mov x0, x14
-//add sp, sp, 16*12
-//add sp, sp, 16
-//ret //debug
 
 ldr x15, [c14] // load with callee
 mov sp, x15
@@ -146,20 +147,20 @@ lsl x13, x13, 22 // x13 = CID_EL0.value * 4MiB (STACK_SIZE)
 add x13, x13, 0x10000 // add STACK_OFFSET
 #mov x0, x13
 
-// save callee SP
-add c14, c12, x13 // c14 = callee_cap + x13
-
-mov x15, sp
-str x15, [c14]
-
 // switch to caller DDC
 msr ddc, c11
 
-// switch to caller stack
+// get caller saved SP location
 add c14, c11, x13 // c14 = caller_cap + x13
 
+// load caller saved SP
 ldr x15, [c14]
 mov sp, x15
+
+// save previous caller saved SP
+ldr x15, [sp]
+str x15, [c14]
+add sp, sp, 16
 
 #ifdef CALLEE_IS_TCB
 
