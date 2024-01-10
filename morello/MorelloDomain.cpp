@@ -1,6 +1,10 @@
 #include "MorelloDomain.hpp"
 
-template class Domain<MorelloDomain, MorelloContext>;
+template class Domain<morello::MorelloDomain, morello::MorelloContext>;
+
+namespace morello {
+
+extern "C" {
 
 extern uint8_t _morello_trampoline_start;
 extern uint8_t _morello_trampoline_end;
@@ -13,6 +17,8 @@ extern uint8_t _morello_rets_trampoline_end;
 
 extern uint8_t _morello_alt_rets_trampoline_start;
 extern uint8_t _morello_alt_rets_trampoline_end;
+
+}
 
 static uint64_t align(uint64_t addr, uint64_t alignment) {
 	return (addr + alignment - 1) & ~(alignment - 1);
@@ -380,4 +386,6 @@ TcbDomainTrampoline::TcbDomainTrampoline(MorelloDomain *to_domain) : SealedTramp
 	if (mprotect(mapped, map_size, PROT_READ | PROT_EXEC)) {
 		throw std::runtime_error("Failed to mprotect trampoline page");
 	}
+}
+
 }

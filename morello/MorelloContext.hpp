@@ -6,6 +6,8 @@
 #include "Domain.hpp"
 #include "util.hpp"
 
+namespace morello {
+
 class MorelloDomain;
 struct SealedTrampoline;
 struct InterDomainTrampoline;
@@ -33,3 +35,5 @@ protected:
 	uint64_t getDomainPermMask() const;
 	uint64_t getStack(uint64_t thread_id) const;
 };
+
+}

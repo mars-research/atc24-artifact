@@ -21,9 +21,9 @@ main_cflags = ['-fno-stack-protector']
 if get_option('default-engine') == 'morello'
   main_cflags += [
     '-DDEFAULT_DOMAIN_HEADER="MorelloDomain.hpp"',
-    '-DDEFAULT_DOMAIN_TYPE=MorelloDomain',
+    '-DDEFAULT_DOMAIN_TYPE=morello::MorelloDomain',
     '-DDEFAULT_DOMAIN_TYPE_MORELLO',
-    '-DDEFAULT_CONTEXT_TYPE=MorelloContext',
+    '-DDEFAULT_CONTEXT_TYPE=morello::MorelloContext',
   ]
 elif get_option('default-engine') == 'null'
   main_cflags += [

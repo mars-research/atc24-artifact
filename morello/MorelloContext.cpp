@@ -3,6 +3,8 @@
 extern uint8_t _morello_rets_trampoline_start;
 extern uint8_t _morello_rets_trampoline_end;
 
+namespace morello {
+
 MorelloContext::MorelloContext() {
 	std::cerr << "[morello] Created context\n";
 
@@ -173,4 +175,6 @@ uint64_t MorelloContext::getDomainPermMask() const {
 
 uint64_t MorelloContext::getStack(uint64_t thread_id) const {
 	return (uint64_t)tcb_base + STACK_OFFSET + thread_id * STACK_SIZE;
+}
+
 }

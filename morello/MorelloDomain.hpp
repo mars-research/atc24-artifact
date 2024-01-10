@@ -8,6 +8,8 @@
 #define CALL_SLOT_SIZE 16
 #define CALL_SLOT_NUM 10
 
+namespace morello {
+
 struct SealedTrampoline;
 struct InterDomainTrampoline;
 struct DomainTcbTrampoline;
@@ -74,3 +76,5 @@ struct DomainTcbTrampoline : public SealedTrampoline {
 struct TcbDomainTrampoline : public SealedTrampoline {
 	TcbDomainTrampoline(MorelloDomain *to_domain);
 };
+
+}
