@@ -10,6 +10,10 @@
 //
 // [Trampoline Code][Super Cap][Caller Cap][Callee Cap]
 
+// Configuration:
+//
+// - CALLEE_IS_TCB
+
 // x0-x8: arguments and return value
 // x9-x15: temporary registers
 // x19-x29: callee-saved
@@ -150,14 +154,14 @@ add x13, x13, 0x10000 // add STACK_OFFSET
 // switch to caller DDC
 msr ddc, c11
 
-// get caller saved SP location
+// get caller SP save location
 add c14, c11, x13 // c14 = caller_cap + x13
 
-// load caller saved SP
+// restore caller SP
 ldr x15, [c14]
 mov sp, x15
 
-// save previous caller saved SP
+// restore previous caller saved SP
 ldr x15, [sp]
 str x15, [c14]
 add sp, sp, 16

@@ -12,6 +12,12 @@ extern uint8_t _morello_trampoline_end;
 extern uint8_t _morello_tcb_trampoline_start;
 extern uint8_t _morello_tcb_trampoline_end;
 
+extern uint8_t _morello_executive_trampoline_start;
+extern uint8_t _morello_executive_trampoline_end;
+
+extern uint8_t _morello_executivetcb_trampoline_start;
+extern uint8_t _morello_executivetcb_trampoline_end;
+
 extern uint8_t _morello_rets_trampoline_start;
 extern uint8_t _morello_rets_trampoline_end;
 
@@ -243,26 +249,39 @@ void SealedTrampoline::mapTrampoline(void *bin_start, size_t bin_size) {
 void *__capability SealedTrampoline::cap() {
 	void *__capability entry_cap = get_ddc_cur();
 
-	entry_cap = __builtin_cheri_perms_and(entry_cap, context->getDomainPermMask());
-	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
-	entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
-	entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped | 0x1); // purecap
-	entry_cap = __builtin_cheri_seal_entry(entry_cap);
+	if (context->trampoline_in_executive) {
+		entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
+		entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
+		entry_cap = __builtin_cheri_seal_entry(entry_cap);
+	} else {
+		entry_cap = __builtin_cheri_perms_and(entry_cap, context->getDomainPermMask());
+		entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped);
+		entry_cap = __builtin_cheri_bounds_set(entry_cap, map_size);
+		entry_cap = __builtin_cheri_address_set(entry_cap, (uint64_t)mapped | 0x1); // purecap
+		entry_cap = __builtin_cheri_seal_entry(entry_cap);
+	}
 
 	return entry_cap;
 }
 
 // Domain -> Domain
 InterDomainTrampoline::InterDomainTrampoline(MorelloDomain *from_domain, MorelloDomain *to_domain) : SealedTrampoline() {
-	size_t bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
-	this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
-
 	if (from_domain->context != to_domain->context) {
 		throw std::runtime_error("Cannot link domains with different contexts");
 	}
 	context = from_domain->context;
 
 	fprintf(stderr, "[trampoline] Domain %s -> Domain %s\n", from_domain->name.data(), to_domain->name.data());
+
+	size_t bin_size;
+
+	if (context->trampoline_in_executive) {
+		bin_size = (size_t)&_morello_executive_trampoline_end - (size_t)&_morello_executive_trampoline_start;
+		this->mapTrampoline((void*)&_morello_executive_trampoline_start, bin_size);
+	} else {
+		bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
+		this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
+	}
 
 	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
 	auto push_capability = [&] (void *__capability cap) {
@@ -302,12 +321,18 @@ InterDomainTrampoline::InterDomainTrampoline(MorelloDomain *from_domain, Morello
 
 // Domain -> TCB
 DomainTcbTrampoline::DomainTcbTrampoline(MorelloDomain *from_domain, void *callee) : SealedTrampoline() {
-	size_t bin_size = (size_t)&_morello_tcb_trampoline_end - (size_t)&_morello_tcb_trampoline_start;
-	this->mapTrampoline((void*)&_morello_tcb_trampoline_start, bin_size);
-
 	context = from_domain->context;
-
 	fprintf(stderr, "[trampoline] Domain %s -> TCB %p\n", from_domain->name.data(), callee);
+
+	size_t bin_size;
+
+	if (context->trampoline_in_executive) {
+		bin_size = (size_t)&_morello_executivetcb_trampoline_end - (size_t)&_morello_executivetcb_trampoline_start;
+		this->mapTrampoline((void*)&_morello_executivetcb_trampoline_start, bin_size);
+	} else {
+		bin_size = (size_t)&_morello_tcb_trampoline_end - (size_t)&_morello_tcb_trampoline_start;
+		this->mapTrampoline((void*)&_morello_tcb_trampoline_start, bin_size);
+	}
 
 	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
 	auto push_capability = [&] (void *__capability cap) {
@@ -345,13 +370,22 @@ DomainTcbTrampoline::DomainTcbTrampoline(MorelloDomain *from_domain, void *calle
 }
 
 // TCB -> Domain
+//
+// TODO: caller is executive
 TcbDomainTrampoline::TcbDomainTrampoline(MorelloDomain *to_domain) : SealedTrampoline() {
-	size_t bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
-	this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
-
 	context = to_domain->context;
 
 	fprintf(stderr, "[trampoline] TCB -> Domain %s\n", to_domain->name.data());
+
+	size_t bin_size;
+
+	if (context->trampoline_in_executive) {
+		bin_size = (size_t)&_morello_executive_trampoline_end - (size_t)&_morello_executive_trampoline_start;
+		this->mapTrampoline((void*)&_morello_executive_trampoline_start, bin_size);
+	} else {
+		bin_size = (size_t)&_morello_trampoline_end - (size_t)&_morello_trampoline_start;
+		this->mapTrampoline((void*)&_morello_trampoline_start, bin_size);
+	}
 
 	void *__capability *context_ptr = (void *__capability *)((uint8_t*)mapped + cap_offset);
 	auto push_capability = [&] (void *__capability cap) {

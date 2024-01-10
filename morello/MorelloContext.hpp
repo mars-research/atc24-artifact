@@ -29,6 +29,7 @@ public:
 
 protected:
 	void *tcb_base;
+	bool trampoline_in_executive;
 	bool use_restricted_mode;
 
 	void setUpTcb();

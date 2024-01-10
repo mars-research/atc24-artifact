@@ -8,6 +8,7 @@ namespace morello {
 MorelloContext::MorelloContext() {
 	std::cerr << "[morello] Created context\n";
 
+	trampoline_in_executive = true;
 	use_restricted_mode = true;
 
 	this->setUpTcb();
