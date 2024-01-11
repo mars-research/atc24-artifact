@@ -106,6 +106,10 @@
         specperl520
       ];
 
+      buildInputs = with pkgs; [
+        llvm.openmp
+      ];
+
       NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
       NIX_LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.libxcrypt-legacy ];
 
