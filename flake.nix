@@ -16,7 +16,12 @@
     supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
   in mars-std.lib.eachSystem supportedSystems (system: let
     pkgs = mars-std.legacyPackages.${system};
+    llvm = pkgs.llvmPackages_16;
     inherit (pkgs) lib;
+
+    mkShell = pkgs.mkShell.override {
+      inherit (llvm) stdenv;
+    };
 
     # Perl 5.20 for CPU2006
     pkgsPerl520 = import nixpkgs-perl520 {
@@ -62,7 +67,6 @@
       sha256 = "1rjh19g1mcvaixyp3fs6d9bfa1nqv5b6s6v1nb24q7wbb75y9m8x";
     };
     wasi-toolchain = let
-      llvm = pkgs.llvmPackages_16;
       makeNormal = name: pkgs.writeShellScript "wasi-${name}" ''
         exec ${llvm.clang-unwrapped}/bin/${name} \
           --sysroot ${wasi-sdk}/share/wasi-sysroot \
@@ -93,7 +97,7 @@
       ln -s ${llvm.lld}/bin/wasm-ld $out/bin/wasm-ld
     '';
   in {
-    devShell = pkgs.mkShell {
+    devShell = mkShell {
       nativeBuildInputs = with pkgs; [
         bashInteractive
         just
