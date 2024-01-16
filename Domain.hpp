@@ -78,6 +78,8 @@ public:
 
 		std::cerr << "[domain] Loading " << name << " @ " << mapped << "\n";
 
+		(static_cast<T*>(this))->preLoad_impl();
+
 		void *stacks = mmap(
 			(void*)((uint8_t*)mapped + STACK_OFFSET),
 			STACK_SIZE * STACK_NUM,
@@ -154,6 +156,9 @@ protected:
 	Alignment page_size;
 
 	std::string name;
+
+	void preLoad_impl() {
+	}
 
 	int mprotect(void *addr, size_t len, int prot) {
 		return (static_cast<T*>(this))->mprotect_impl(addr, len, prot);
