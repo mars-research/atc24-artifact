@@ -25,9 +25,9 @@ void NullDomain::postLoad_impl() {
 	}
 }
 
-uint64_t NullDomain::start_impl(uint64_t thread_id) {
-	uint64_t (*f)() = (uint64_t (*)())entry_point;
-	return f();
+uint64_t NullDomain::start_impl(uint64_t thread_id, uint64_t arg) {
+	uint64_t (*f)(uint64_t) = (uint64_t (*)(uint64_t))entry_point;
+	return f(arg);
 }
 
 void NullDomain::setSlot_impl(uint64_t slot_id, NullDomain &callee) {

@@ -39,7 +39,7 @@ void IdealDomain::postLoad_impl() {
 	}
 }
 
-uint64_t IdealDomain::start_impl(uint64_t thread_id) {
+uint64_t IdealDomain::start_impl(uint64_t thread_id, uint64_t arg) {
 	/*
 	uint64_t (*f)() = (uint64_t (*)())entry_point;
 	return f();
@@ -56,7 +56,7 @@ uint64_t IdealDomain::start_impl(uint64_t thread_id) {
 	//printf("sp @ %lx\n", initial_sp);
 
 #ifdef __aarch64__
-	register uint64_t x0 __asm__("x0") = thread_id;
+	register uint64_t x0 __asm__("x0") = arg;
 	asm(
 		// FIXME: Save to TCB stack!
 		"mov x9, sp;"
@@ -75,6 +75,7 @@ uint64_t IdealDomain::start_impl(uint64_t thread_id) {
 	return x0;
 #elif defined(__x86_64__)
 	register uint64_t rax __asm__("rax");
+	register uint64_t rdi __asm__("rdi") = arg;
 	asm(
 		// FIXME: Save to TCB stack!
 		"mov r10, rsp;"
@@ -86,8 +87,8 @@ uint64_t IdealDomain::start_impl(uint64_t thread_id) {
 		"pop rsp;"
 
 		: "=a"(rax)
-		: [entry_point] "r"(entry_point), [initial_sp] "r"(initial_sp)
-		: "memory", "cc", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11"
+		: [entry_point] "r"(entry_point), [initial_sp] "r"(initial_sp), "r"(rdi)
+		: "memory", "cc", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11"
 	);
 	return rax;
 #else
@@ -166,6 +167,7 @@ InterDomainTrampoline::InterDomainTrampoline(IdealDomain *from_domain, IdealDoma
 
 	void volatile **context_ptr = (void volatile **)((uint8_t*)mapped + cap_offset);
 	auto push_ptr = [&] (void *ptr) {
+		fprintf(stderr, "[ideal] Pushed %p @ %p\n", ptr, context_ptr);
 		*context_ptr = ptr;
 		context_ptr++;
 	};

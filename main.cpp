@@ -44,7 +44,7 @@ int main() {
 	uint64_t thread_id = 0;
 	uint64_t ret;
 
-	ret = foo.start(thread_id);
+	ret = foo.start(thread_id, 0);
 	printf("foo() -> 0x%lx\n", ret);
 
 #ifdef DEFAULT_DOMAIN_TYPE_MORELLO

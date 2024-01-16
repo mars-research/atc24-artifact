@@ -33,7 +33,7 @@ public:
 	~MorelloDomain();
 
 	void postLoad_impl();
-	uint64_t start_impl(uint64_t thread_id);
+	uint64_t start_impl(uint64_t thread_id, uint64_t arg);
 	void setSlot_impl(uint64_t slot_id, MorelloDomain &callee);
 	void setSlotTcb_impl(uint64_t slot_id, void *callee);
 

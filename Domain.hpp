@@ -122,8 +122,8 @@ public:
 	Domain(const Domain&) = delete;
 	Domain& operator=(const Domain&) = delete;
 
-	uint64_t start(uint64_t thread_id) {
-		return (static_cast<T*>(this))->start_impl(thread_id);
+	uint64_t start(uint64_t thread_id, uint64_t arg) {
+		return (static_cast<T*>(this))->start_impl(thread_id, arg);
 	}
 
 	void setSlot(uint64_t slot_id, T &callee) {

@@ -89,7 +89,7 @@ void MorelloDomain::postLoad_impl() {
 	}
 }
 
-uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
+uint64_t MorelloDomain::start_impl(uint64_t thread_id, uint64_t arg) {
 	uint64_t stack_top = this->getStack(thread_id);
 	uint64_t stack_bottom = stack_top + STACK_SIZE;
 	uint64_t initial_sp = Alignment(16).alignDown(stack_bottom);
@@ -125,7 +125,7 @@ uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
 	if (!context->use_restricted_mode) {
 		std::cerr << "[morello] Staying in Executive Mode\n";
 
-		register uint64_t x0 __asm__("x0") = thread_id;
+		register uint64_t x0 __asm__("x0") = arg;
 		asm(
 			// FIXME: Save to TCB stack!
 			"mov x9, sp;"
@@ -155,7 +155,7 @@ uint64_t MorelloDomain::start_impl(uint64_t thread_id) {
 	} else {
 		std::cerr << "[morello] Entering Restricted Mode\n";
 
-		register uint64_t x0 __asm__("x0") = thread_id;
+		register uint64_t x0 __asm__("x0") = arg;
 		asm(
 			"mov x9, %[entry_point];"
 			"blrr %[callee];"

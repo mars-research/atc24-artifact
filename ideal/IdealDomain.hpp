@@ -26,7 +26,7 @@ public:
 	IdealDomain(IdealContext *context, uint64_t id, std::string name, const char *path);
 
 	void postLoad_impl();
-	uint64_t start_impl(uint64_t thread_id);
+	uint64_t start_impl(uint64_t thread_id, uint64_t arg);
 	void setSlot_impl(uint64_t slot_id, IdealDomain &callee);
 	void setSlotTcb_impl(uint64_t slot_id, void *callee);
 
