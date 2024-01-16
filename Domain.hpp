@@ -81,7 +81,7 @@ public:
 		void *stacks = mmap(
 			(void*)((uint8_t*)mapped + STACK_OFFSET),
 			STACK_SIZE * STACK_NUM,
-			PROT_READ | PROT_WRITE,
+			PROT_NONE,
 			MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
 			-1,
 			0
@@ -90,6 +90,11 @@ public:
 			throw std::runtime_error("Failed to map stacks");
 		}
 		fprintf(stderr, "[domain] Stacks @ %p\n", stacks);
+
+		if (this->mprotect(stacks, STACK_SIZE * STACK_NUM, PROT_READ | PROT_WRITE) < 0) {
+			fprintf(stderr, "Failed to protect stacks (%s)\n", strerror(errno));
+			std::runtime_error("Failed to protect stacks");
+		}
 
 		for (auto i = 0; i < STACK_NUM; ++i) {
 			uint64_t stack_top = this->getStack(i);
@@ -149,6 +154,14 @@ protected:
 	Alignment page_size;
 
 	std::string name;
+
+	int mprotect(void *addr, size_t len, int prot) {
+		return (static_cast<T*>(this))->mprotect_impl(addr, len, prot);
+	}
+
+	int mprotect_impl(void *addr, size_t len, int prot) {
+		return ::mprotect(addr, len, prot);
+	}
 
 	void load(const char *path) {
 		const int fd = open(path, O_RDONLY, 0);
@@ -223,7 +236,7 @@ protected:
 				void *mapping = mmap(
 					(void*)page_size.alignDown(load_bias + vaddr),
 					file_map_size,
-					prot,
+					PROT_NONE,
 					MAP_PRIVATE | MAP_FIXED,
 					fd,
 					page_size.alignDown(offset)
@@ -231,7 +244,12 @@ protected:
 
 				if (mapping == MAP_FAILED) {
 					fprintf(stderr, "Failed to map segment 0x%lx (%s)\n", vaddr, strerror(errno));
-					abort();
+					throw std::runtime_error("Failed to map segment");
+				}
+
+				if (this->mprotect(mapping, file_map_size, prot) < 0) {
+					fprintf(stderr, "Failed to protect segment 0x%lx (%s)\n", vaddr, strerror(errno));
+					throw std::runtime_error("Failed to protect segment");
 				}
 			}
 
@@ -248,7 +266,7 @@ protected:
 					void *mapping = mmap(
 						(void*)(page_size.alignDown(load_bias + vaddr) + file_map_size),
 						total_map_size - file_map_size,
-						prot,
+						PROT_NONE,
 						MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
 						-1,
 						0
@@ -256,7 +274,12 @@ protected:
 
 					if (mapping == MAP_FAILED) {
 						fprintf(stderr, "Failed to map anonymous portion for segment 0x%lx (%s)\n", vaddr, strerror(errno));
-						abort();
+						throw std::runtime_error("Failed to map anonymous portion");
+					}
+
+					if (this->mprotect(mapping, total_map_size - file_map_size, prot) < 0) {
+						fprintf(stderr, "Failed to protect segment 0x%lx (%s)\n", vaddr, strerror(errno));
+						throw std::runtime_error("Failed to protect anonymous portion");
 					}
 				}
 			}
