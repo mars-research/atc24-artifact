@@ -6,7 +6,7 @@
 static inline void ** get_call_base() {
 	void **base;
 	asm(
-		"adrp %0, _null_call_slots;"
+		"adrp %0, _ideal_call_slots;"
 		: "=r"(base)
 	);
 	return base;
