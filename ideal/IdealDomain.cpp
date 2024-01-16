@@ -55,6 +55,7 @@ uint64_t IdealDomain::start_impl(uint64_t thread_id) {
 
 	//printf("sp @ %lx\n", initial_sp);
 
+#ifdef __aarch64__
 	register uint64_t x0 __asm__("x0") = thread_id;
 	asm(
 		// FIXME: Save to TCB stack!
@@ -72,6 +73,26 @@ uint64_t IdealDomain::start_impl(uint64_t thread_id) {
 		: "memory", "x30", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17"
 	);
 	return x0;
+#elif defined(__x86_64__)
+	register uint64_t rax __asm__("rax");
+	asm(
+		// FIXME: Save to TCB stack!
+		"mov r10, rsp;"
+		"mov rsp, %[initial_sp];"
+		"push r10;"
+
+		"call %[entry_point];"
+
+		"pop rsp;"
+
+		: "=a"(rax)
+		: [entry_point] "r"(entry_point), [initial_sp] "r"(initial_sp)
+		: "memory", "cc", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11"
+	);
+	return rax;
+#else
+	return 1;
+#endif
 }
 
 void IdealDomain::setSlot_impl(uint64_t slot_id, IdealDomain &callee) {

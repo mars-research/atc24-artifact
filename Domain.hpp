@@ -35,6 +35,8 @@ typedef Elf64_Rela Rela;
 
 #ifdef __aarch64__
 #define R_RELATIVE R_AARCH64_RELATIVE
+#elif defined(__x86_64__)
+#define R_RELATIVE R_X86_64_RELATIVE
 #else
 #error Domain.hpp: Unsupported platform
 #endif
