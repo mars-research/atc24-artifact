@@ -1,6 +1,6 @@
 project('domrt', 'c', 'cpp')
 
-engines = {}
+engines = get_option('engines')
 sources = ['main.cpp']
 includes = []
 
@@ -8,22 +8,34 @@ subdir('null')
 subdir('ideal')
 subdir('morello')
 
-if get_option('engines').contains('null')
+if engines.contains('auto')
+  engines += ['null', 'ideal']
+
+  if build_machine.cpu() == 'aarch64'
+    engines += ['morello']
+  endif
+endif
+
+if engines.contains('null')
   sources += null_sources
   includes += null_includes
 endif
 
-if get_option('engines').contains('ideal')
+if engines.contains('ideal')
   sources += ideal_sources
   includes += ideal_includes
 endif
 
-if get_option('engines').contains('morello')
+if engines.contains('morello')
   sources += morello_sources
   includes += morello_includes
 endif
 
 main_cflags = ['-fno-stack-protector']
+if build_machine.cpu() == 'x86_64'
+  main_cflags += ['-masm=intel']
+endif
+
 if get_option('default-engine') == 'morello'
   main_cflags += [
     '-DDEFAULT_DOMAIN_HEADER="MorelloDomain.hpp"',

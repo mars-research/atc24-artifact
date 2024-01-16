@@ -1,8 +1,8 @@
 option(
   'engines',
   type : 'array',
-  choices : ['null', 'morello', 'ideal'],
-  value : ['null', 'morello', 'ideal'],
+  choices : ['null', 'morello', 'ideal', 'auto'],
+  value : ['auto'],
 )
 
 option(
