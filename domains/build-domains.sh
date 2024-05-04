@@ -3,19 +3,36 @@ set -euo pipefail
 
 dir=$(realpath $(dirname $0))
 domain_type="$1"
+machine=$(uname -m)
 
-CC=aarch64-unknown-linux-gnu-clang
-CFLAGS=(
+declare -a CFLAGS
+
+case "$machine" in
+	x86_64)
+		CC=clang
+		CFLAGS+=("-masm=intel")
+		;;
+	aarch64)
+		CC=aarch64-unknown-linux-gnu-clang
+		CFLAGS+=("-Wl,--image-base=0x10000")
+		;;
+	*)
+		>&2 echo "Unsupported machine $machine"
+		exit 1
+		;;
+esac
+
+CFLAGS+=(
 	"-O2"
 
 	"-I$dir/../$domain_type/runtime"
 
 	"-Wl,--defsym=_${domain_type}_call_slots=0x0"
-	"-Wl,--image-base=0x10000"
 
 	"-static-pie"
 	"-fPIC"
 	"-ffreestanding"
+	"-nostdlib"
 	"-fno-plt"
 	"-pedantic"
 	"-Wno-language-extension-token"
