@@ -1,7 +1,7 @@
 project('domrt', 'c', 'cpp')
 
 engines = get_option('engines')
-sources = ['main.cpp']
+sources = []
 includes = []
 
 subdir('null')
@@ -62,7 +62,15 @@ else
 endif
 
 executable('main',
-  sources : sources,
+  sources : sources + ['main.cpp'],
+  include_directories : includes,
+  c_args : main_cflags,
+  cpp_args : main_cflags,
+  override_options : ['cpp_std=c++17'],
+)
+
+executable('pong',
+  sources : sources + ['pong.cpp'],
   include_directories : includes,
   c_args : main_cflags,
   cpp_args : main_cflags,
