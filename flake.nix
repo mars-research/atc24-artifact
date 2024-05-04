@@ -13,7 +13,7 @@
   in {
     devShell = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
-        # Insert dev dependencies here
+        just
       ];
     };
   });
