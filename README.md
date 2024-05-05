@@ -15,12 +15,15 @@ For each machine above, the general steps include:
 1. SSH into the prepared machine
 1. Verify experiment conditions
 1. Clone this repository
+1. Git submodule init
+1. Build and install modified clang
 1. Run experiments
 1. Verify results in `results`
 
 ## `x86-64`
 
 ```bash
+./install_x86_clangs.sh
 just run-x86-64
 ```
 

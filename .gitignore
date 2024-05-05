@@ -1,5 +1,7 @@
 /worktrees
 
+/clang_install_dir
+
 .direnv
 .vscode
 
