@@ -1,3 +1,6 @@
 [submodule "llvm-SFI"]
 	path = llvm-SFI
 	url = git@github.com:mars-research/llvm-SFI.git
+[submodule "user-trampoline-arm64"]
+	path = user-trampoline-arm64
+	url = https://github.com/mars-research/user-trampoline-arm64.git
