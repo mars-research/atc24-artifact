@@ -4,3 +4,6 @@
 [submodule "user-trampoline-arm64"]
 	path = user-trampoline-arm64
 	url = https://github.com/mars-research/user-trampoline-arm64.git
+[submodule "user-trampoline"]
+	path = user-trampoline
+	url = https://github.com/mars-research/user-trampoline.git
