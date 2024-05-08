@@ -1,6 +1,6 @@
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/lencod.c specCPU2006/benchspec/CPU2006/464.h264ref/src/lencod.c
 --- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/lencod.c	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/benchspec/CPU2006/464.h264ref/src/lencod.c	2023-05-24 00:54:52.678823261 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/lencod.c	2024-01-03 03:03:00.445912815 +0000
 @@ -260,7 +260,7 @@
        }
    }
@@ -12,7 +12,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
    enc_picture = enc_frame_picture = enc_top_picture = enc_bottom_picture = NULL;
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_matrix.c specCPU2006/benchspec/CPU2006/464.h264ref/src/q_matrix.c
 --- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_matrix.c	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_matrix.c	2023-05-24 00:59:14.991352403 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_matrix.c	2024-01-03 03:03:00.445912815 +0000
 @@ -13,7 +13,7 @@
  
  #include "global.h"
@@ -33,7 +33,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
      else
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_offsets.c specCPU2006/benchspec/CPU2006/464.h264ref/src/q_offsets.c
 --- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/q_offsets.c	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_offsets.c	2023-05-24 00:58:47.487401753 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/q_offsets.c	2024-01-03 03:03:00.445912815 +0000
 @@ -13,7 +13,7 @@
  
  #include "global.h"
@@ -54,7 +54,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
      else
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/slice.c specCPU2006/benchspec/CPU2006/464.h264ref/src/slice.c
 --- specCPU2006.orig/benchspec/CPU2006/464.h264ref/src/slice.c	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/benchspec/CPU2006/464.h264ref/src/slice.c	2023-05-24 00:59:54.360281522 +0000
++++ specCPU2006/benchspec/CPU2006/464.h264ref/src/slice.c	2024-01-03 03:03:00.446912811 +0000
 @@ -92,7 +92,7 @@
  
      currStream->write_flag = 0;
@@ -93,7 +93,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
        {
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/bin/parse.pl specCPU2006/bin/parse.pl
 --- specCPU2006.orig/bin/parse.pl	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/bin/parse.pl	2023-05-22 21:38:29.629971507 +0000
++++ specCPU2006/bin/parse.pl	2024-01-03 03:03:00.446912811 +0000
 @@ -1382,7 +1382,7 @@
          $re .= "|$strip_item";
        }
@@ -105,7 +105,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
        }
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/bin/runspec specCPU2006/bin/runspec
 --- specCPU2006.orig/bin/runspec	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/bin/runspec	2023-05-22 21:38:29.629971507 +0000
++++ specCPU2006/bin/runspec	2024-01-03 03:03:00.446912811 +0000
 @@ -1,3 +1,4 @@
 +#!/usr/bin/env specperl520
  #!/spec/cpu2006/bin/specperl
@@ -113,7 +113,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
  #!/usr/bin/perl
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/bin/specdiff specCPU2006/bin/specdiff
 --- specCPU2006.orig/bin/specdiff	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/bin/specdiff	2023-05-22 21:38:29.629971507 +0000
++++ specCPU2006/bin/specdiff	2024-01-03 03:03:00.446912811 +0000
 @@ -1,3 +1,4 @@
 +#!/usr/bin/env specperl520
  #!/spec/cpu2006/bin/specperl
@@ -121,7 +121,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
  #!/usr/bin/perl
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/bin/util.pl specCPU2006/bin/util.pl
 --- specCPU2006.orig/bin/util.pl	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/bin/util.pl	2023-05-22 21:38:29.630971505 +0000
++++ specCPU2006/bin/util.pl	2024-01-03 03:03:00.446912811 +0000
 @@ -879,7 +879,7 @@
  			   match split qr
  			   list lslice splice push pop shift unshift reverse
@@ -133,7 +133,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
  			   method method_named
 diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -x SUMS.tools -x '*.rej' specCPU2006.orig/MANIFEST specCPU2006/MANIFEST
 --- specCPU2006.orig/MANIFEST	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/MANIFEST	2023-05-24 01:00:10.924251697 +0000
++++ specCPU2006/MANIFEST	2024-01-03 03:03:00.448912803 +0000
 @@ -7028,7 +7028,7 @@
  efe95ec99c8a04f441f1e09fb0134c65 * 00000286 benchspec/CPU2006/464.h264ref/src/intrarefresh.h
  09362029c197e8e170c5dd4ee720a593 * 0000223C benchspec/CPU2006/464.h264ref/src/leaky_bucket.c
@@ -201,7 +201,7 @@ diff -Nur -x config -x build -x exe -x run -x result -x tmp -x output -x tools -
  918fc8f04fdc73a46834b5bd091b08a0 * 000005F9 bin/verify_md5
  18be9375e5a753f766616a51eb6131f0 * 00000003 bin/version.txt
 --- specCPU2006.orig/tools/src/specinvoke/unix.c	1970-01-01 00:00:00.000000000 +0000
-+++ specCPU2006/tools/src/specinvoke/unix.c	2023-05-22 21:38:29.633971497 +0000
++++ specCPU2006/tools/src/specinvoke/unix.c	2024-01-03 03:03:00.449912799 +0000
 @@ -123,7 +123,7 @@
  		fprintf (stderr, "Can't create zero-length temporary filename\n ");
  		specinvoke_exit (1, si);
