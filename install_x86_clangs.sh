@@ -9,7 +9,7 @@ fi
 
 if [ ! -d "$PWD/clang_install_dir/mpk" ]; then
 cd llvm-SFI
-git checkout MPK
+git checkout atc_mpk
 nix develop --command bash -c  "cmake \$cmakeFlags -Sllvm -Bbuild -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX="$PWD/../clang_install_dir/mpk" && cd build/ && cmake --build . --target install -j128 && exit"
 cd ../
 fi
