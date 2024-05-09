@@ -7,3 +7,6 @@
 [submodule "user-trampoline"]
 	path = user-trampoline
 	url = https://github.com/mars-research/user-trampoline.git
+[submodule "spec-env"]
+	path = spec-env
+	url = https://github.com/mars-research/spec-env.git
