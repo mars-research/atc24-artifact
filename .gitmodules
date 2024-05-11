@@ -10,3 +10,9 @@
 [submodule "spec-env"]
 	path = spec-env
 	url = https://github.com/mars-research/spec-env.git
+[submodule "dome"]
+	path = dome
+	url = https://github.com/mars-research/dome.git
+[submodule "morello-mars"]
+	path = morello-mars
+	url = https://github.com/mars-research/morello-mars.git
