@@ -66,4 +66,4 @@ bash run_morello_specCPU2017.sh
 
 All the numbers used in the paper are listed in [this google sheet](https://docs.google.com/spreadsheets/d/1QQmUcpg08b73es8k5PawnE1VA0wWnKoAghqjsrcmsGk/edit?usp=sharing).
 
-For each number please go into spec-env/specCPU20XX/result to cross check the result.  
+Please go into `spec-env/specCPU20XX/result` to cross check the result.  
