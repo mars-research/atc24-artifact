@@ -23,8 +23,32 @@ For each machine above, the general steps include:
 ## `x86-64`
 
 ```bash
-./install_x86_clangs.sh
+bash install_x86_clangs.sh
+bash run_fig12.sh
+bash x86_setup_specCPU2006.sh
+bash x86_setup_specCPU2017.sh
+bash run_x86_specCPU2006.sh
+bash run_x86_specCPU2017.sh
 just run-x86-64
+```
+
+## `arm`
+
+```bash
+bash install_arm_clangs.sh
+bash run_fig10.sh
+bash arm_setup_specCPU2006.sh
+bash run_arm_specCPU2006.sh
+```
+
+## `morello`
+
+```bash
+bash run_fig11.sh
+bash morello_setup_specCPU2006.sh
+bash morello_setup_specCPU2017.sh
+bash run_morello_specCPU2006.sh
+bash run_morello_specCPU2017.sh
 ```
 
 ### Plots
@@ -32,3 +56,14 @@ just run-x86-64
 - Figure 8 - Overhead of Safe and Unsafe IPC (`fig8`):
     - `x86-64-null.csv`
     - `x86-64-ideal.csv`
+
+- Figuer 10, Figuer 11, Figuer 12:
+    - `fig10.csv`
+    - `fig11.csv`
+    - `fig12.csv`
+
+### SPECCPU numbers
+
+All the numbers used in the paper are listed in [this google sheet](https://docs.google.com/spreadsheets/d/1QQmUcpg08b73es8k5PawnE1VA0wWnKoAghqjsrcmsGk/edit?usp=sharing).
+
+For each number please go into spec-env/specCPU20XX/result to cross check the result.  
