@@ -1,8 +1,21 @@
-# ATC'24 Artifact Evaluation
+# Artifact Evaluation for _Opportunities and Limitations of Modern Hardware Isolation Mechanisms_
+
+Thank you for your time and picking our paper for the artifact evaluation.
+
+This documentation contains steps necessary to reproduce the artifacts for our paper titled **Opportunities and Limitations of Modern Hardware Isolation Mechanisms**.
 
 ## Overview
 
-We provide SSH access to the following machines to run our experiments:
+The general steps include:
+
+1. Prepare hardware
+1. Set up SPEC
+1. Run experiments
+1. Verify results
+
+## 1. Prepare hardware
+
+We use the following machines to run our experiments:
 
 - `x86-64`: Framework Laptop 13
     - Intel Core i7-1165G7
@@ -10,60 +23,92 @@ We provide SSH access to the following machines to run our experiments:
     - Tensor G3 (1x Cortex-X3, 4x Cortex-A715, 4x Cortex-A510)
 - `morello`: Morello Development Board
 
-For each machine above, the general steps include:
+> [!TIP]
+> To simplify the evaluation process, we provide SSH access to the above machines with the benchmark environment already set up.
+> We still include the full manual setup process in this document for reference.
 
-1. SSH into the prepared machine
-1. Verify experiment conditions
-1. Clone this repository
-1. Git submodule init
-1. Build and install modified clang
-1. Run experiments
-1. Verify results in `results`
+TODO: Verify constant frequency
 
-## `x86-64`
+## 2. Set up SPEC
 
-```bash
-bash install_x86_clangs.sh
-bash run_fig12.sh
-bash x86_setup_specCPU2006.sh
-bash x86_setup_specCPU2017.sh
-bash run_x86_specCPU2006.sh
-bash run_x86_specCPU2017.sh
-just run-x86-64
+> [!TIP]
+> On prepared nodes, this step has already been done.
+> Unmodified copies of the SPEC benchmarks are available at `~/specCPU2006.tar.gz` and `~/specCPU2017.tar.gz`.
+
+We patch SPEC CPU2006 and CPU2017 to fix compilation errors with newer toolchains ([spec2006.patch](https://github.com/mars-research/spec-env/blob/main/spec2006.patch), [spec2017.patch](https://github.com/mars-research/spec-env/blob/main/spec2017.patch)).
+Clone this repository, and install SPEC under the following subdirectories:
+
+- CPU2006: `spec2006`
+- CPU2017: `spec2017`
+
+After installation, the `spec2006` and `spec2017` directories should both contain the `MANIFEST` file.
+
+Next, run the following commands to apply the patches:
+
+```
+just setup-spec2006
+just setup-spec2017
 ```
 
-## `arm`
+Our configurations are available under `spec-configs` which will be used in later steps.
 
-```bash
-bash install_arm_clangs.sh
-bash run_fig10.sh
-bash arm_setup_specCPU2006.sh
-bash run_arm_specCPU2006.sh
-```
+## 3. Run experiments
 
-## `morello`
+### `x86-64` (Fig. 3, 6, 8, 12)
 
-```bash
-bash run_fig11.sh
-bash morello_setup_specCPU2006.sh
-bash morello_setup_specCPU2017.sh
-bash run_morello_specCPU2006.sh
-bash run_morello_specCPU2017.sh
-```
+> [!TIP]
+> You can inspect what each target does in `justfile`.
 
-### Plots
+1. Build and install Clang
+    - `just clang-x86-64`
+    - This can take a long time. For convenience, the prepared nodes already have a warm compilation cache.
+1. Reproduce Figure 12 - NF overheads on varying batch sizes (x86)
+    - `just fig12` -> `results/fig12.csv`
+1. Reproduce Figure 8 - Overhead of Safe and Unsafe IPC
+    - `just fig8-x86-64` -> `results/x86-64-ideal.csv`
+1. Reproduce SPEC benchmarks (Fig. 3, 6)
+    - `just spec2006-x86-64` -> `spec2006/result`
+    - `just spec2017-x86-64` -> `spec2017/result`
 
-- Figure 8 - Overhead of Safe and Unsafe IPC (`fig8`):
-    - `x86-64-null.csv`
-    - `x86-64-ideal.csv`
+### `aarch64` (Fig. 4, 7, 8, 10)
 
-- Figuer 10, Figuer 11, Figuer 12:
-    - `fig10.csv`
-    - `fig11.csv`
-    - `fig12.csv`
+1. Build and install Clang
+    - `just clang-aarch64`
+    - This can take a long time. For convenience, the prepared nodes already have a warm compilation cache.
+1. Reproduce Figure 8 - Overhead of Safe and Unsafe IPC
+    - `just fig8-aarch64` -> `results/aarch64-ideal.csv`
+1. Reproduce Figure 10 - NF overheads on varying batch sizes (AArch64)
+    - `just fig10` -> `results/fig10.csv`
+1. Reproduce SPEC benchmarks (Fig. 4, 7)
+    - `just spec2006-aarch64` -> `spec2006/result`
 
-### SPECCPU numbers
+### `morello` (Fig. 5, 8, 11)
 
-All the numbers used in the paper are listed in [this google sheet](https://docs.google.com/spreadsheets/d/1QQmUcpg08b73es8k5PawnE1VA0wWnKoAghqjsrcmsGk/edit?usp=sharing).
+We run our benchmarks on both the mainline kernel (`mainline`) and the Morello-enabled kernel (`morello`).
 
-Please go into `spec-env/specCPU20XX/result` to cross check the result.  
+> [!TIP]
+> By default, the prepared node is booted with the Morello-enabled kernel.
+> To switch between kernels, run `sudo reboot-mainline` or `sudo reboot-morello`.
+> The machine will shut down and be reachable again in around 5 minutes.
+
+Run on Morello-enabled kernel:
+
+1. Reproduce Figure 8 - Overhead of Safe and Unsafe IPC
+    - `just fig8-morello` -> `results/morello-ideal.csv`, `results/morello-exswitch.csv`
+1. Reproduce Figure 11 - NF overheads on varying batch sizes (Morello)
+    - `just fig11-morello` ->  `results/fig11-morello.csv`
+1. Reproduce SPEC benchmarks (Fig. 5)
+    - `just spec2006-morello` -> `spec2006/result-morello`
+    - `just spec2017-morello` -> `spec2017/result-morello`
+
+Run on mainline kernel:
+
+1. Reproduce Figure 11 - NF overheads on varying batch sizes (Morello)
+    - `just fig11-mainline` ->  `results/fig11-mainline.csv`
+1. Reproduce SPEC benchmarks (Fig. 5)
+    - `just spec2006-morello-mainline` -> `spec2006/result-mainline`
+    - `just spec2017-morello-mainline` -> `spec2017/result-mainline`
+
+## 4. Verify results
+
+Cross check the results you obtained with the ones on the paper.
