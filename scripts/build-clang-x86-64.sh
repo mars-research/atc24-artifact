@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 if [ ! -d "$PWD/clang_install_dir/gs" ]; then
 cd llvm-SFI

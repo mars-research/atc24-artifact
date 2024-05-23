@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -euo pipefail
 
 cd user-trampoline
 rm $PWD/../fig12.csv

@@ -15,19 +15,24 @@ The general steps include:
 
 ## 1. Prepare hardware
 
+> [!TIP]
+> To simplify the evaluation process, we provide SSH access to all machines with the benchmark environment already set up.
+> We still include the full manual setup process in this document for reference.
+
 We use the following machines to run our experiments:
 
 - `x86-64`: Framework Laptop 13
     - Intel Core i7-1165G7
+    - Hyperthreading disabled, frequency pinned to max without turbo boost
 - `aarch64`: Pixel 8
     - Tensor G3 (1x Cortex-X3, 4x Cortex-A715, 4x Cortex-A510)
+    - Sleep states disabled, frequency pinned to max on Cortex-X3
 - `morello`: Morello Development Board
 
-> [!TIP]
-> To simplify the evaluation process, we provide SSH access to the above machines with the benchmark environment already set up.
-> We still include the full manual setup process in this document for reference.
+### PMCCNTR access (`aarch64`, `morello`)
 
-TODO: Verify constant frequency
+On both `aarch64` and `morello`, we use the out-of-tree [`pmu_el0_cycle_counter`](https://github.com/jerinjacobk/armv8_pmu_cycle_counter_el0) module to enable userspace access to the `pmccntr_el0` register.
+With root access, run `echo "PMCCNTR=1" > /dev/pmuctl`.
 
 ## 2. Set up SPEC
 
@@ -36,12 +41,13 @@ TODO: Verify constant frequency
 > Unmodified copies of the SPEC benchmarks are available at `~/specCPU2006.tar.gz` and `~/specCPU2017.tar.gz`.
 
 We patch SPEC CPU2006 and CPU2017 to fix compilation errors with newer toolchains ([spec2006.patch](https://github.com/mars-research/spec-env/blob/main/spec2006.patch), [spec2017.patch](https://github.com/mars-research/spec-env/blob/main/spec2017.patch)).
-Clone this repository, and install SPEC under the following subdirectories:
+Clone this repository, and run `just bootstrap-spec-env`.
+Then, install SPEC under the following subdirectories:
 
-- CPU2006: `spec2006`
-- CPU2017: `spec2017`
+- CPU2006: `worktrees/spec-env/specCPU2006`
+- CPU2017: `worktrees/spec-env/specCPU2017`
 
-After installation, the `spec2006` and `spec2017` directories should both contain the `MANIFEST` file.
+After installation, the directories should both contain the `MANIFEST` file.
 
 Next, run the following commands to apply the patches:
 
@@ -54,10 +60,10 @@ Our configurations are available under `spec-configs` which will be used in late
 
 ## 3. Run experiments
 
-### `x86-64` (Fig. 3, 6, 8, 12)
-
 > [!TIP]
 > You can inspect what each target does in `justfile`.
+
+### `x86-64` (Fig. 3, 6, 8, 12)
 
 1. Build and install Clang
     - `just clang-x86-64`
@@ -86,10 +92,10 @@ Our configurations are available under `spec-configs` which will be used in late
 
 We run our benchmarks on both the mainline kernel (`mainline`) and the Morello-enabled kernel (`morello`).
 
-> [!TIP]
+> [!IMPORTANT]
 > By default, the prepared node is booted with the Morello-enabled kernel.
 > To switch between kernels, run `sudo reboot-mainline` or `sudo reboot-morello`.
-> The machine will shut down and be reachable again in around 5 minutes.
+> **The machine will shut down and be reachable again in around 5 minutes.**
 
 Run on Morello-enabled kernel:
 

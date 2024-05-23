@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 cd morello-mars
 rm ../fig11.csv 
 nix develop --command bash -c  "cd ../user-trampoline-arm64 && git checkout atc_cheri && make -j && echo "morello_c" >> $PWD/../fig11.csv &&  ./nfv_c 1 >> $PWD/../fig11.csv && ./nfv_c 4 >> $PWD/../fig11.csv && ./nfv_c 8 >> $PWD/../fig11.csv && ./nfv_c 16 >> $PWD/../fig11.csv && ./nfv_c >> $PWD/../fig11.csv && exit"
