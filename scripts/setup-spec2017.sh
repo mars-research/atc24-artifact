@@ -11,7 +11,9 @@ if [[ ! -e "$SPEC/MANIFEST" ]]; then
 fi
 
 >&2 echo "Applying patches..."
+pushd "$SPEC"
 patch -N -p1 < ../spec2017.patch
+popd
 
 >&2 echo "Copying configs..."
 cp $base/spec2017-configs/* ./specCPU2017/config/

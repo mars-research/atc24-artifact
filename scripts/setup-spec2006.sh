@@ -11,7 +11,7 @@ if [[ ! -e "$SPEC/MANIFEST" ]]; then
 fi
 
 >&2 echo "Applying patches..."
-just setup-spec2006
+NIX_CFLAGS_COMPILE="-Wno-implicit-int" just setup-spec2006
 
 >&2 echo "Copying configs..."
 cp $base/spec2006-configs/* ./specCPU2006/config/
