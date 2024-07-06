@@ -1,9 +1,3 @@
-# Artifact Evaluation for _Opportunities and Limitations of Modern Hardware Isolation Mechanisms_
-
-Thank you for your time and picking our paper for the artifact evaluation.
-
-This documentation contains steps necessary to reproduce the artifacts for our paper titled **Opportunities and Limitations of Modern Hardware Isolation Mechanisms**.
-
 ## Overview
 
 The general steps include:
