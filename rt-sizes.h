@@ -1,0 +1,9 @@
+#define MAX_CALL_STACK 20
+
+// 2MiB
+#define STACK_SIZE 2*1024*1024
+
+#define CALL_SIZE (2*1024*1024+16)
+#define CALL_END_OF_STACK (2*1024*1024)
+#define CALL_NEXT (2*1024*1024)
+#define MAX_CALL_STACK 20

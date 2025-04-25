@@ -1,0 +1,3 @@
+[submodule "llvm_arm_mte"]
+	path = llvm_arm_mte
+	url = git@github.com:mars-research/llvm-project-13.x.git
