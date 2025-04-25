@@ -1,0 +1,9 @@
+%define USE_TRAMPOLINE
+%define USE_ATOMIC
+%define USE_SIMD
+%define USE_REGWIPE
+%define USE_PASSING_BUFFER
+%define USE_WRPKRU
+%define USE_CHECK_RAX
+%include "trampoline.S"
+%include "functions.S"

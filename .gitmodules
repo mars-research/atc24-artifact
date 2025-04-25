@@ -1,0 +1,6 @@
+[submodule "llvm-project-13.x"]
+	path = llvm-project-13.x
+	url = git@github.com:mars-research/llvm-project-13.x.git
+[submodule "sxfi"]
+	path = sxfi
+	url = git@github.com:mars-research/sxfi.git

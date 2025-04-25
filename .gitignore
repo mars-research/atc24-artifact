@@ -1,0 +1,5 @@
+/ipc.*
+*.o
+*.so
+nfv_gs
+target

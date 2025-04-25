@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "dom_b.h": "c",
+        "stdio.h": "c",
+        "dom_a.h": "c"
+    }
+}
